@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="225" viewBox="0 0 400 225">
+  <rect width="400" height="225" fill="#0f0f13"/>
+  <!-- Board outline -->
+  <rect x="110" y="15" width="140" height="190" rx="4" fill="#1a1a24" stroke="#2a2a3a" stroke-width="1.5"/>
+  <!-- Placed blocks (bottom rows) -->
+  <!-- Row bottom-1 -->
+  <rect x="111" y="177" width="13" height="13" rx="2" fill="#22d3ee"/>
+  <rect x="125" y="177" width="13" height="13" rx="2" fill="#fbbf24"/>
+  <rect x="139" y="177" width="13" height="13" rx="2" fill="#34d399"/>
+  <rect x="153" y="177" width="13" height="13" rx="2" fill="#f87171"/>
+  <rect x="167" y="177" width="13" height="13" rx="2" fill="#a78bfa"/>
+  <rect x="181" y="177" width="13" height="13" rx="2" fill="#60a5fa"/>
+  <rect x="195" y="177" width="13" height="13" rx="2" fill="#fb923c"/>
+  <rect x="209" y="177" width="13" height="13" rx="2" fill="#22d3ee"/>
+  <rect x="223" y="177" width="13" height="13" rx="2" fill="#fbbf24"/>
+  <!-- Row bottom-2 -->
+  <rect x="111" y="163" width="13" height="13" rx="2" fill="#60a5fa"/>
+  <rect x="125" y="163" width="13" height="13" rx="2" fill="#34d399"/>
+  <rect x="153" y="163" width="13" height="13" rx="2" fill="#a78bfa"/>
+  <rect x="167" y="163" width="13" height="13" rx="2" fill="#f87171"/>
+  <rect x="181" y="163" width="13" height="13" rx="2" fill="#fbbf24"/>
+  <rect x="195" y="163" width="13" height="13" rx="2" fill="#22d3ee"/>
+  <rect x="223" y="163" width="13" height="13" rx="2" fill="#fb923c"/>
+  <!-- Row bottom-3 -->
+  <rect x="111" y="149" width="13" height="13" rx="2" fill="#fbbf24"/>
+  <rect x="139" y="149" width="13" height="13" rx="2" fill="#f87171"/>
+  <rect x="167" y="149" width="13" height="13" rx="2" fill="#34d399"/>
+  <rect x="195" y="149" width="13" height="13" rx="2" fill="#60a5fa"/>
+  <rect x="209" y="149" width="13" height="13" rx="2" fill="#a78bfa"/>
+  <!-- Active T-piece (purple) -->
+  <rect x="153" y="121" width="13" height="13" rx="2" fill="#a78bfa"/>
+  <rect x="139" y="135" width="13" height="13" rx="2" fill="#a78bfa"/>
+  <rect x="153" y="135" width="13" height="13" rx="2" fill="#a78bfa"/>
+  <rect x="167" y="135" width="13" height="13" rx="2" fill="#a78bfa"/>
+  <!-- Ghost (dim) -->
+  <rect x="153" y="177" width="13" height="13" rx="2" fill="#a78bfa" opacity="0.2"/>
+  <!-- Next piece label (sidebar) -->
+  <rect x="270" y="40" width="70" height="55" rx="6" fill="#1a1a24" stroke="#2a2a3a" stroke-width="1"/>
+  <text x="305" y="33" font-family="Arial" font-size="9" fill="#64748b" text-anchor="middle">NEXT</text>
+  <!-- I-piece in next box -->
+  <rect x="277" y="63" width="13" height="13" rx="2" fill="#22d3ee"/>
+  <rect x="291" y="63" width="13" height="13" rx="2" fill="#22d3ee"/>
+  <rect x="305" y="63" width="13" height="13" rx="2" fill="#22d3ee"/>
+  <rect x="319" y="63" width="13" height="13" rx="2" fill="#22d3ee"/>
+  <!-- Score panel -->
+  <rect x="270" y="110" width="70" height="38" rx="6" fill="#1a1a24" stroke="#2a2a3a" stroke-width="1"/>
+  <text x="305" y="126" font-family="Arial" font-size="9" fill="#64748b" text-anchor="middle">SCORE</text>
+  <text x="305" y="141" font-family="Arial" font-weight="bold" font-size="12" fill="#e2e8f0" text-anchor="middle">1500</text>
+  <!-- Title -->
+  <text x="200" y="218" font-family="Arial" font-weight="bold" font-size="18" fill="#a78bfa" text-anchor="middle">🟪 Tetris</text>
+</svg>
