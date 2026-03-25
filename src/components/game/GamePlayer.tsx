@@ -22,15 +22,19 @@ export function GamePlayer({ game }: GamePlayerProps) {
     }
   }
 
-  const aspectRatio = (game.height / game.width) * 100;
+  // 뷰포트 높이 80% 를 넘지 않으면서 aspect ratio 유지
+  const containerStyle = {
+    width: `min(100%, calc(80svh * ${game.width} / ${game.height}))`,
+    aspectRatio: `${game.width} / ${game.height}`,
+  };
 
   return (
-    <div className="w-full max-w-2xl mx-auto">
+    <div className="w-full flex flex-col items-center">
       {/* Player container */}
       <div
         ref={containerRef}
-        className="relative rounded-xl overflow-hidden border border-[var(--color-surface-border)] bg-black"
-        style={{ paddingBottom: `${aspectRatio}%` }}
+        className="relative w-full rounded-xl overflow-hidden border border-[var(--color-surface-border)] bg-black"
+        style={containerStyle}
       >
         {/* Loading skeleton */}
         {!isLoaded && (
@@ -54,7 +58,7 @@ export function GamePlayer({ game }: GamePlayerProps) {
       </div>
 
       {/* Controls bar */}
-      <div className="flex items-center justify-between mt-3 px-1">
+      <div className="flex items-center justify-between mt-3 px-1 w-full" style={{ maxWidth: `min(100%, calc(80svh * ${game.width} / ${game.height}))` }}>
         <div className="flex items-center gap-2 text-slate-400 text-sm">
           <span>🎮</span>
           <span>{game.tags.join(' · ')}</span>

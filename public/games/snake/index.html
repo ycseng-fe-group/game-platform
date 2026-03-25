@@ -9,7 +9,14 @@
   body { background: #0f0f13; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; color: #e2e8f0; }
   h1 { font-size: 1.2rem; margin-bottom: 8px; color: #a78bfa; }
   #score { font-size: 1rem; margin-bottom: 12px; color: #94a3b8; }
-  canvas { border: 2px solid #2a2a3a; border-radius: 8px; display: block; }
+  canvas {
+    border: 2px solid #2a2a3a;
+    border-radius: 8px;
+    display: block;
+    width: min(calc(100vw - 16px), calc(100vh - 110px));
+    aspect-ratio: 1;
+    height: auto;
+  }
   #msg { margin-top: 12px; color: #64748b; font-size: 0.85rem; }
   #game-over { display: none; margin-top: 10px; text-align: center; }
   #game-over p { color: #f87171; font-size: 1rem; margin-bottom: 8px; }

@@ -12,7 +12,8 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
-    min-height: 100vh;
+    height: 100vh;
+    overflow: hidden;
     font-family: Arial, sans-serif;
     color: #e2e8f0;
     user-select: none;
@@ -22,6 +23,7 @@
     display: flex;
     gap: 16px;
     align-items: flex-start;
+    transform-origin: top center;
   }
   canvas {
     border: 2px solid #2a2a3a;
@@ -367,6 +369,19 @@ canvas.addEventListener('touchend', e => {
   draw();
   e.preventDefault();
 }, { passive: false });
+
+// wrapper를 viewport에 맞게 스케일
+function scaleWrapper() {
+  const wrapper = document.getElementById('wrapper');
+  // wrapper 고유 크기: canvas(200) + gap(16) + sidebar(110) = 326 x canvas(400)
+  const NATIVE_W = 326, NATIVE_H = 400;
+  const avW = window.innerWidth  - 16;
+  const avH = window.innerHeight - 60; // h1 높이 제외
+  const scale = Math.min(avW / NATIVE_W, avH / NATIVE_H);
+  wrapper.style.transform = `scale(${scale})`;
+}
+scaleWrapper();
+window.addEventListener('resize', scaleWrapper);
 </script>
 </body>
 </html>

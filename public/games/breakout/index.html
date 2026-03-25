@@ -9,7 +9,15 @@
   body { background: #0f0f13; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; color: #e2e8f0; }
   h1 { font-size: 1.2rem; color: #a78bfa; margin-bottom: 6px; }
   #info { font-size: 0.9rem; color: #94a3b8; margin-bottom: 10px; }
-  canvas { border: 2px solid #2a2a3a; border-radius: 8px; cursor: none; }
+  canvas {
+    border: 2px solid #2a2a3a;
+    border-radius: 8px;
+    cursor: none;
+    touch-action: none;
+    width: min(calc(100vw - 16px), calc((100vh - 60px) * 460 / 420));
+    aspect-ratio: 460 / 420;
+    height: auto;
+  }
   #msg { margin-top: 10px; font-size: 0.85rem; color: #64748b; }
   button { background: #7c3aed; color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; margin-top: 8px; font-size: 0.9rem; }
   button:hover { background: #6d28d9; }
@@ -19,7 +27,7 @@
 <h1>🧱 Breakout</h1>
 <div id="info">점수: <strong id="score">0</strong> | 목숨: <strong id="lives">3</strong></div>
 <canvas id="canvas" width="460" height="420"></canvas>
-<div id="msg">마우스로 패들을 조종하세요</div>
+<div id="msg">마우스 또는 터치로 패들을 조종하세요</div>
 <script>
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
@@ -41,10 +49,14 @@ function init() {
   update();
 }
 
-canvas.addEventListener('mousemove', e=>{
+function movePaddle(clientX) {
   const rect = canvas.getBoundingClientRect();
-  paddle.x = Math.max(0, Math.min(W-paddle.w, e.clientX-rect.left-paddle.w/2));
-});
+  const scaleX = W / rect.width;
+  paddle.x = Math.max(0, Math.min(W-paddle.w, (clientX-rect.left)*scaleX - paddle.w/2));
+}
+canvas.addEventListener('mousemove', e => movePaddle(e.clientX));
+canvas.addEventListener('touchmove', e => { movePaddle(e.touches[0].clientX); e.preventDefault(); }, { passive: false });
+canvas.addEventListener('touchstart', e => { movePaddle(e.touches[0].clientX); e.preventDefault(); }, { passive: false });
 
 function update() {
   if(gameOver||win) return;
