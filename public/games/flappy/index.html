@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Flappy Bird</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f0f13; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; }
+  canvas { border: 2px solid #2a2a3a; border-radius: 8px; }
+</style>
+</head>
+<body>
+<canvas id="canvas" width="380" height="520"></canvas>
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+const W=380, H=520;
+let bird, pipes, score, started, dead, frame;
+
+function reset() {
+  bird={x:80,y:H/2,vy:0,r:14};
+  pipes=[]; score=0; started=false; dead=false; frame=0;
+}
+
+function addPipe() {
+  const gap=130, minY=80, maxY=H-gap-100;
+  const topH=minY+Math.random()*(maxY-minY);
+  pipes.push({x:W,topH,gap,w:52});
+}
+
+function jump() {
+  if(dead){reset();return;}
+  if(!started) started=true;
+  bird.vy=-7.5;
+}
+
+document.addEventListener('keydown', e=>{ if(e.code==='Space'||e.key===' '){jump();e.preventDefault();} });
+canvas.addEventListener('click', jump);
+canvas.addEventListener('touchstart', e=>{jump();e.preventDefault();});
+
+function tick() {
+  if(started&&!dead) {
+    bird.vy+=0.45; bird.y+=bird.vy;
+    frame++;
+    if(frame%90===0) addPipe();
+    pipes.forEach(p=>p.x-=2.8);
+    pipes=pipes.filter(p=>p.x>-p.w);
+    // Collision
+    if(bird.y-bird.r<0||bird.y+bird.r>H-60) dead=true;
+    pipes.forEach(p=>{
+      if(bird.x+bird.r>p.x&&bird.x-bird.r<p.x+p.w) {
+        if(bird.y-bird.r<p.topH||bird.y+bird.r>p.topH+p.gap) dead=true;
+      }
+      if(!p.scored&&p.x+p.w<bird.x){p.scored=true;score++;}
+    });
+  }
+  draw();
+  requestAnimationFrame(tick);
+}
+
+function draw() {
+  // Sky gradient
+  const grad=ctx.createLinearGradient(0,0,0,H);
+  grad.addColorStop(0,'#1a1a2e'); grad.addColorStop(1,'#16213e');
+  ctx.fillStyle=grad; ctx.fillRect(0,0,W,H);
+  // Stars
+  ctx.fillStyle='rgba(255,255,255,0.3)';
+  [[30,40],[100,80],[200,30],[320,90],[60,150],[280,60]].forEach(([x,y])=>{
+    ctx.beginPath();ctx.arc(x,y,1.5,0,Math.PI*2);ctx.fill();
+  });
+  // Ground
+  ctx.fillStyle='#1a1a24'; ctx.fillRect(0,H-60,W,60);
+  ctx.fillStyle='#2a2a3a'; ctx.fillRect(0,H-62,W,4);
+  // Pipes
+  pipes.forEach(p=>{
+    ctx.fillStyle='#4ade80';
+    ctx.fillRect(p.x,0,p.w,p.topH);
+    ctx.fillRect(p.x,p.topH+p.gap,p.w,H);
+    ctx.fillStyle='#22c55e';
+    ctx.fillRect(p.x-4,p.topH-20,p.w+8,20);
+    ctx.fillRect(p.x-4,p.topH+p.gap,p.w+8,20);
+  });
+  // Bird
+  ctx.save();
+  ctx.translate(bird.x,bird.y);
+  ctx.rotate(Math.min(Math.max(bird.vy*0.05,-0.5),0.5));
+  ctx.font='26px Arial'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('🐦',0,0);
+  ctx.restore();
+  // Score
+  ctx.fillStyle='white'; ctx.font='bold 28px Arial'; ctx.textAlign='center';
+  ctx.fillText(score,W/2,50);
+  if(!started) {
+    ctx.fillStyle='rgba(0,0,0,0.5)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#a78bfa'; ctx.font='bold 22px Arial'; ctx.textAlign='center';
+    ctx.fillText('🐦 Flappy Bird',W/2,H/2-30);
+    ctx.fillStyle='#94a3b8'; ctx.font='16px Arial';
+    ctx.fillText('스페이스 / 클릭으로 시작',W/2,H/2+10);
+  }
+  if(dead) {
+    ctx.fillStyle='rgba(0,0,0,0.6)'; ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#f87171'; ctx.font='bold 26px Arial'; ctx.textAlign='center';
+    ctx.fillText('게임 오버!',W/2,H/2-20);
+    ctx.fillStyle='white'; ctx.font='18px Arial';
+    ctx.fillText('점수: '+score,W/2,H/2+15);
+    ctx.fillStyle='#a78bfa'; ctx.font='14px Arial';
+    ctx.fillText('클릭하여 재시작',W/2,H/2+45);
+  }
+}
+
+reset();
+tick();
+</script>
+</body>
+</html>

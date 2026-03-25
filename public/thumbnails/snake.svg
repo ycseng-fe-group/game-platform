@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="225" viewBox="0 0 400 225">
+  <rect width="400" height="225" fill="#0f0f13"/>
+  <!-- Grid dots -->
+  <g fill="#1a1a24">
+    <circle cx="50" cy="50" r="2"/><circle cx="100" cy="50" r="2"/><circle cx="150" cy="50" r="2"/><circle cx="200" cy="50" r="2"/><circle cx="250" cy="50" r="2"/><circle cx="300" cy="50" r="2"/><circle cx="350" cy="50" r="2"/>
+    <circle cx="50" cy="112" r="2"/><circle cx="100" cy="112" r="2"/><circle cx="150" cy="112" r="2"/><circle cx="200" cy="112" r="2"/><circle cx="250" cy="112" r="2"/><circle cx="300" cy="112" r="2"/><circle cx="350" cy="112" r="2"/>
+    <circle cx="50" cy="175" r="2"/><circle cx="100" cy="175" r="2"/><circle cx="150" cy="175" r="2"/><circle cx="200" cy="175" r="2"/><circle cx="250" cy="175" r="2"/><circle cx="300" cy="175" r="2"/><circle cx="350" cy="175" r="2"/>
+  </g>
+  <!-- Snake body -->
+  <rect x="100" y="95" width="36" height="36" rx="6" fill="#7c3aed"/>
+  <rect x="140" y="95" width="36" height="36" rx="6" fill="#7c3aed"/>
+  <rect x="180" y="95" width="36" height="36" rx="6" fill="#7c3aed"/>
+  <rect x="180" y="55" width="36" height="36" rx="6" fill="#7c3aed"/>
+  <rect x="220" y="55" width="36" height="36" rx="6" fill="#7c3aed"/>
+  <!-- Head -->
+  <rect x="220" y="95" width="36" height="36" rx="6" fill="#a78bfa"/>
+  <!-- Food -->
+  <circle cx="300" cy="113" r="12" fill="#f87171"/>
+  <!-- Title -->
+  <text x="200" y="210" font-family="Arial" font-weight="bold" font-size="18" fill="#a78bfa" text-anchor="middle">🐍 Snake Classic</text>
+</svg>

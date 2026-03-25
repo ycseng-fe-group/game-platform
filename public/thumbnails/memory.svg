@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="225" viewBox="0 0 400 225">
+  <rect width="400" height="225" fill="#0f0f13"/>
+  <!-- Cards grid -->
+  <rect x="50" y="20" width="65" height="65" rx="10" fill="#22222f" stroke="#7c3aed" stroke-width="2"/>
+  <text x="82" y="62" font-size="28" text-anchor="middle">🎮</text>
+  <rect x="125" y="20" width="65" height="65" rx="10" fill="#22222f" stroke="#7c3aed" stroke-width="2"/>
+  <text x="157" y="62" font-size="28" text-anchor="middle">🏆</text>
+  <rect x="200" y="20" width="65" height="65" rx="10" fill="#1a1a24" stroke="#2a2a3a" stroke-width="2"/>
+  <text x="232" y="62" font-size="22" fill="#4a3a6b" text-anchor="middle" font-weight="bold">?</text>
+  <rect x="275" y="20" width="65" height="65" rx="10" fill="#1a1a24" stroke="#2a2a3a" stroke-width="2"/>
+  <text x="307" y="62" font-size="22" fill="#4a3a6b" text-anchor="middle" font-weight="bold">?</text>
+  <!-- Row 2 -->
+  <rect x="50" y="95" width="65" height="65" rx="10" fill="#064e3b" stroke="#10b981" stroke-width="2"/>
+  <text x="82" y="137" font-size="28" text-anchor="middle">⭐</text>
+  <rect x="125" y="95" width="65" height="65" rx="10" fill="#064e3b" stroke="#10b981" stroke-width="2"/>
+  <text x="157" y="137" font-size="28" text-anchor="middle">⭐</text>
+  <rect x="200" y="95" width="65" height="65" rx="10" fill="#1a1a24" stroke="#2a2a3a" stroke-width="2"/>
+  <text x="232" y="137" font-size="22" fill="#4a3a6b" text-anchor="middle" font-weight="bold">?</text>
+  <rect x="275" y="95" width="65" height="65" rx="10" fill="#1a1a24" stroke="#2a2a3a" stroke-width="2"/>
+  <text x="307" y="137" font-size="22" fill="#4a3a6b" text-anchor="middle" font-weight="bold">?</text>
+  <text x="200" y="210" font-family="Arial" font-weight="bold" font-size="18" fill="#a78bfa" text-anchor="middle">🧠 Memory Match</text>
+</svg>

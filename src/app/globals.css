@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+@theme {
+  --color-surface: #0f0f13;
+  --color-surface-card: #1a1a24;
+  --color-surface-hover: #22222f;
+  --color-surface-border: #2a2a3a;
+  --color-accent: #7c3aed;
+  --color-accent-bright: #a78bfa;
+  --color-accent-muted: #4c1d95;
+
+  --font-display: "Rajdhani", "Arial Black", sans-serif;
+  --font-body: "Inter", "Arial", sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: var(--color-surface);
+  color: #e2e8f0;
+  font-family: var(--font-body);
+  min-height: 100vh;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--color-surface-border);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--color-accent-muted);
+}
+
+/* Game card glow on hover */
+.game-card-glow:hover {
+  box-shadow: 0 0 20px rgba(124, 58, 237, 0.3);
+}

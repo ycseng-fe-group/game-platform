@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Whack-a-Mole</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f0f13; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; color: #e2e8f0; }
+  h1 { font-size: 1.2rem; color: #a78bfa; margin-bottom: 6px; }
+  #info { display: flex; gap: 20px; font-size: 0.9rem; color: #94a3b8; margin-bottom: 16px; }
+  #board { display: grid; grid-template-columns: repeat(3,120px); gap: 12px; }
+  .hole { width: 120px; height: 110px; background: #1a1a24; border: 2px solid #2a2a3a; border-radius: 50%; position: relative; overflow: hidden; cursor: pointer; transition: transform 0.1s; display: flex; align-items: flex-end; justify-content: center; }
+  .hole:active { transform: scale(0.95); }
+  .mole { font-size: 3rem; position: absolute; bottom: -60px; transition: bottom 0.18s ease-out; line-height: 1; pointer-events: none; }
+  .mole.up { bottom: 5px; }
+  .mole.whacked { filter: grayscale(1); transform: scale(0.7); }
+  #start-btn { background: #7c3aed; color: white; border: none; padding: 10px 28px; border-radius: 8px; cursor: pointer; font-size: 1rem; margin-top: 16px; }
+  #start-btn:hover { background: #6d28d9; }
+  #result { display: none; margin-top: 12px; text-align: center; }
+  #result p { color: #10b981; font-size: 1.1rem; }
+</style>
+</head>
+<body>
+<h1>🔨 Whack-a-Mole</h1>
+<div id="info">
+  <span>점수: <strong id="score">0</strong></span>
+  <span>시간: <strong id="timer">60</strong>초</span>
+  <span>콤보: <strong id="combo">0</strong>x</span>
+</div>
+<div id="board">
+  <div class="hole" onclick="whack(0)"><div class="mole" id="m0">🐹</div></div>
+  <div class="hole" onclick="whack(1)"><div class="mole" id="m1">🐹</div></div>
+  <div class="hole" onclick="whack(2)"><div class="mole" id="m2">🐹</div></div>
+  <div class="hole" onclick="whack(3)"><div class="mole" id="m3">🐹</div></div>
+  <div class="hole" onclick="whack(4)"><div class="mole" id="m4">🐹</div></div>
+  <div class="hole" onclick="whack(5)"><div class="mole" id="m5">🐹</div></div>
+  <div class="hole" onclick="whack(6)"><div class="mole" id="m6">🐹</div></div>
+  <div class="hole" onclick="whack(7)"><div class="mole" id="m7">🐹</div></div>
+  <div class="hole" onclick="whack(8)"><div class="mole" id="m8">🐹</div></div>
+</div>
+<button id="start-btn" onclick="startGame()">게임 시작</button>
+<div id="result"><p id="result-text"></p></div>
+<script>
+let score=0, combo=0, timeLeft=60, running=false;
+let timers = Array(9).fill(null);
+let moleTimers = Array(9).fill(null);
+
+function startGame() {
+  score=0;combo=0;timeLeft=60;running=true;
+  document.getElementById('score').textContent='0';
+  document.getElementById('combo').textContent='0';
+  document.getElementById('timer').textContent='60';
+  document.getElementById('start-btn').style.display='none';
+  document.getElementById('result').style.display='none';
+  // Hide all moles
+  for(let i=0;i<9;i++) { const m=document.getElementById('m'+i); m.className='mole'; m.textContent='🐹'; }
+  // Start popping
+  for(let i=0;i<9;i++) scheduleMole(i);
+  // Countdown
+  const countdown = setInterval(()=>{
+    timeLeft--;
+    document.getElementById('timer').textContent=timeLeft;
+    if(timeLeft<=0){ clearInterval(countdown); endGame(); }
+  },1000);
+}
+
+function scheduleMole(i) {
+  if(!running) return;
+  const delay = 600+Math.random()*1200;
+  timers[i] = setTimeout(()=>{
+    if(!running) return;
+    const m = document.getElementById('m'+i);
+    m.className='mole up'; m.textContent='🐹';
+    moleTimers[i] = setTimeout(()=>{
+      m.className='mole'; combo=0;
+      document.getElementById('combo').textContent='0';
+      scheduleMole(i);
+    }, 900+Math.random()*600);
+  }, delay);
+}
+
+function whack(i) {
+  if(!running) return;
+  const m = document.getElementById('m'+i);
+  if(!m.classList.contains('up')) return;
+  clearTimeout(moleTimers[i]);
+  m.className='mole whacked'; m.textContent='💫';
+  combo++;
+  const pts = combo>=3?20:10;
+  score+=pts;
+  document.getElementById('score').textContent=score;
+  document.getElementById('combo').textContent=combo;
+  setTimeout(()=>{ m.className='mole'; m.textContent='🐹'; scheduleMole(i); },300);
+}
+
+function endGame() {
+  running=false;
+  for(let i=0;i<9;i++) { clearTimeout(timers[i]); clearTimeout(moleTimers[i]); const m=document.getElementById('m'+i); m.className='mole'; }
+  document.getElementById('result').style.display='block';
+  document.getElementById('result-text').textContent='최종 점수: '+score+'점 🏆';
+  document.getElementById('start-btn').textContent='다시 시작';
+  document.getElementById('start-btn').style.display='block';
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Memory Match</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #0f0f13; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; font-family: Arial, sans-serif; color: #e2e8f0; }
+  h1 { font-size: 1.2rem; color: #a78bfa; margin-bottom: 8px; }
+  #info { display: flex; gap: 16px; margin-bottom: 14px; font-size: 0.9rem; color: #94a3b8; }
+  #board { display: grid; grid-template-columns: repeat(4, 80px); gap: 8px; }
+  .card { width: 80px; height: 80px; border-radius: 10px; cursor: pointer; position: relative; transform-style: preserve-3d; transition: transform 0.4s; }
+  .card.flipped, .card.matched { transform: rotateY(180deg); }
+  .card-face { position: absolute; inset: 0; border-radius: 10px; display: flex; align-items: center; justify-content: center; font-size: 2rem; backface-visibility: hidden; }
+  .card-back { background: #1a1a24; border: 2px solid #2a2a3a; }
+  .card-back::after { content: '?'; font-size: 1.5rem; color: #4a3a6b; }
+  .card-front { background: #22222f; border: 2px solid #7c3aed; transform: rotateY(180deg); }
+  .card.matched .card-front { border-color: #10b981; background: #064e3b; }
+  #win { display: none; text-align: center; margin-top: 16px; }
+  #win p { color: #10b981; font-size: 1.1rem; margin-bottom: 10px; }
+  button { background: #7c3aed; color: white; border: none; padding: 8px 20px; border-radius: 6px; cursor: pointer; font-size: 0.9rem; margin-top: 12px; }
+  button:hover { background: #6d28d9; }
+</style>
+</head>
+<body>
+<h1>🧠 Memory Match</h1>
+<div id="info">
+  <span>이동: <strong id="moves">0</strong></span>
+  <span>매칭: <strong id="pairs">0</strong>/8</span>
+  <span>시간: <strong id="timer">0</strong>초</span>
+</div>
+<div id="board"></div>
+<button onclick="init()" style="margin-top:14px">새 게임</button>
+<div id="win"><p>🎉 클리어!</p></div>
+<script>
+const EMOJIS = ['🎮','🕹️','👾','🎯','🏆','⭐','🚀','💎'];
+let cards = [], flipped = [], matched = 0, moves = 0, lock = false, start, timerInterval;
+
+function init() {
+  clearInterval(timerInterval);
+  const deck = [...EMOJIS,...EMOJIS].sort(()=>Math.random()-0.5);
+  cards = deck.map((e,i)=>({id:i,emoji:e,flippedState:false,matchedState:false}));
+  flipped=[]; matched=0; moves=0; lock=false; start=null;
+  document.getElementById('moves').textContent='0';
+  document.getElementById('pairs').textContent='0';
+  document.getElementById('timer').textContent='0';
+  document.getElementById('win').style.display='none';
+  render();
+}
+
+function render() {
+  const board = document.getElementById('board');
+  board.innerHTML = '';
+  cards.forEach(c => {
+    const el = document.createElement('div');
+    el.className = 'card' + (c.flippedState||c.matchedState?' flipped':'') + (c.matchedState?' matched':'');
+    el.innerHTML = '<div class="card-face card-back"></div><div class="card-face card-front">'+c.emoji+'</div>';
+    el.onclick = () => flip(c.id);
+    board.appendChild(el);
+  });
+}
+
+function flip(id) {
+  if(lock) return;
+  const card = cards[id];
+  if(card.flippedState || card.matchedState) return;
+  if(!start) { start=Date.now(); timerInterval=setInterval(()=>{ document.getElementById('timer').textContent=Math.floor((Date.now()-start)/1000); },1000); }
+  card.flippedState = true;
+  flipped.push(id);
+  render();
+  if(flipped.length===2) {
+    lock=true; moves++;
+    document.getElementById('moves').textContent=moves;
+    const [a,b] = flipped;
+    if(cards[a].emoji===cards[b].emoji) {
+      cards[a].matchedState=cards[b].matchedState=true;
+      matched++; document.getElementById('pairs').textContent=matched;
+      flipped=[]; lock=false; render();
+      if(matched===8) { clearInterval(timerInterval); setTimeout(()=>{document.getElementById('win').style.display='block';},300); }
+    } else {
+      setTimeout(()=>{ cards[a].flippedState=cards[b].flippedState=false; flipped=[]; lock=false; render(); },900);
+    }
+  }
+}
+
+init();
+</script>
+</body>
+</html>

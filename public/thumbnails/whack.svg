@@ -1,0 +1,18 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="225" viewBox="0 0 400 225">
+  <rect width="400" height="225" fill="#0f0f13"/>
+  <!-- Holes -->
+  <ellipse cx="90" cy="95" rx="50" ry="40" fill="#1a1a24" stroke="#2a2a3a" stroke-width="2"/>
+  <ellipse cx="200" cy="95" rx="50" ry="40" fill="#1a1a24" stroke="#2a2a3a" stroke-width="2"/>
+  <ellipse cx="310" cy="95" rx="50" ry="40" fill="#1a1a24" stroke="#2a2a3a" stroke-width="2"/>
+  <ellipse cx="90" cy="170" rx="50" ry="40" fill="#1a1a24" stroke="#2a2a3a" stroke-width="2"/>
+  <ellipse cx="200" cy="170" rx="50" ry="40" fill="#1a1a24" stroke="#2a2a3a" stroke-width="2"/>
+  <ellipse cx="310" cy="170" rx="50" ry="40" fill="#1a1a24" stroke="#2a2a3a" stroke-width="2"/>
+  <!-- Moles -->
+  <text x="90" y="110" font-size="30" text-anchor="middle">🐹</text>
+  <text x="310" y="110" font-size="30" text-anchor="middle">🐹</text>
+  <text x="200" y="185" font-size="30" text-anchor="middle">🐹</text>
+  <!-- Hammer -->
+  <text x="200" y="80" font-size="34" text-anchor="middle">🔨</text>
+  <!-- Score -->
+  <text x="200" y="27" font-family="Arial" font-weight="bold" font-size="20" fill="#a78bfa" text-anchor="middle">🔨 Whack-a-Mole</text>
+</svg>
