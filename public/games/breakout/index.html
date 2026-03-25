@@ -54,9 +54,10 @@ function movePaddle(clientX) {
   const scaleX = W / rect.width;
   paddle.x = Math.max(0, Math.min(W-paddle.w, (clientX-rect.left)*scaleX - paddle.w/2));
 }
+canvas.addEventListener('click', () => { if (gameOver || win) init(); });
 canvas.addEventListener('mousemove', e => movePaddle(e.clientX));
 canvas.addEventListener('touchmove', e => { movePaddle(e.touches[0].clientX); e.preventDefault(); }, { passive: false });
-canvas.addEventListener('touchstart', e => { movePaddle(e.touches[0].clientX); e.preventDefault(); }, { passive: false });
+canvas.addEventListener('touchstart', e => { if (gameOver || win) { init(); } else { movePaddle(e.touches[0].clientX); } e.preventDefault(); }, { passive: false });
 
 function update() {
   if(gameOver||win) return;
@@ -104,7 +105,7 @@ function draw() {
     ctx.fillStyle='#f87171'; ctx.font='bold 28px Arial'; ctx.textAlign='center';
     ctx.fillText('게임 오버!',W/2,H/2-10);
     ctx.fillStyle='#94a3b8'; ctx.font='16px Arial';
-    ctx.fillText('페이지를 새로고침하여 재시작',W/2,H/2+25);
+    ctx.fillText('화면을 클릭하여 재시작',W/2,H/2+25);
   }
   if(win) {
     ctx.fillStyle='rgba(0,0,0,0.7)'; ctx.fillRect(0,0,W,H);
@@ -112,6 +113,8 @@ function draw() {
     ctx.fillText('🏆 클리어!',W/2,H/2-10);
     ctx.fillStyle='#94a3b8'; ctx.font='16px Arial';
     ctx.fillText('점수: '+score,W/2,H/2+25);
+    ctx.fillStyle='#94a3b8'; ctx.font='14px Arial';
+    ctx.fillText('화면을 클릭하여 재시작',W/2,H/2+50);
   }
 }
 
