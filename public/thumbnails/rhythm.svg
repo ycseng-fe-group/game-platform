@@ -1,0 +1,101 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="225" viewBox="0 0 400 225">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#080810"/>
+      <stop offset="100%" stop-color="#0a0a18"/>
+    </linearGradient>
+    <radialGradient id="gD" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ff6b6b" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#ff6b6b" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="gF" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffd93d" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#ffd93d" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="gJ" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#6bcb77" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#6bcb77" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="gK" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#4d96ff" stop-opacity="0.9"/>
+      <stop offset="100%" stop-color="#4d96ff" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="400" height="225" fill="url(#bg)"/>
+
+  <!-- Lane columns (left game view) -->
+  <rect x="10"  y="10" width="38" height="170" fill="rgba(120,30,30,0.25)" rx="2"/>
+  <rect x="50"  y="10" width="38" height="170" fill="rgba(120,110,0,0.25)" rx="2"/>
+  <rect x="90"  y="10" width="38" height="170" fill="rgba(30,120,40,0.25)" rx="2"/>
+  <rect x="130" y="10" width="38" height="170" fill="rgba(20,60,140,0.25)" rx="2"/>
+
+  <!-- Hit line -->
+  <rect x="10" y="160" width="158" height="2" fill="rgba(255,255,255,0.7)"/>
+
+  <!-- Notes falling (lane 0 - red) -->
+  <circle cx="29"  cy="40"  r="10" fill="#ff6b6b"/>
+  <circle cx="29"  cy="40"  r="16" fill="url(#gD)" opacity="0.5"/>
+  <circle cx="29"  cy="90"  r="10" fill="#ff6b6b" opacity="0.7"/>
+  <circle cx="29"  cy="130" r="10" fill="#ff6b6b" opacity="0.4"/>
+
+  <!-- Notes (lane 1 - yellow) -->
+  <circle cx="69"  cy="60"  r="10" fill="#ffd93d"/>
+  <circle cx="69"  cy="60"  r="16" fill="url(#gF)" opacity="0.5"/>
+  <circle cx="69"  cy="110" r="10" fill="#ffd93d" opacity="0.6"/>
+
+  <!-- Notes (lane 2 - green) -->
+  <circle cx="109" cy="50"  r="10" fill="#6bcb77"/>
+  <circle cx="109" cy="50"  r="16" fill="url(#gJ)" opacity="0.5"/>
+  <circle cx="109" cy="100" r="10" fill="#6bcb77" opacity="0.6"/>
+  <circle cx="109" cy="140" r="10" fill="#6bcb77" opacity="0.35"/>
+
+  <!-- Notes (lane 3 - blue) -->
+  <circle cx="149" cy="35"  r="10" fill="#4d96ff"/>
+  <circle cx="149" cy="35"  r="16" fill="url(#gK)" opacity="0.5"/>
+  <circle cx="149" cy="80"  r="10" fill="#4d96ff" opacity="0.7"/>
+  <circle cx="149" cy="120" r="10" fill="#4d96ff" opacity="0.4"/>
+
+  <!-- Key labels at bottom -->
+  <circle cx="29"  cy="175" r="8" fill="none" stroke="#ff6b6b" stroke-width="1.5"/>
+  <text x="29"  y="179" font-family="Arial" font-weight="bold" font-size="8" fill="#ff6b6b" text-anchor="middle">D</text>
+  <circle cx="69"  cy="175" r="8" fill="none" stroke="#ffd93d" stroke-width="1.5"/>
+  <text x="69"  y="179" font-family="Arial" font-weight="bold" font-size="8" fill="#ffd93d" text-anchor="middle">F</text>
+  <circle cx="109" cy="175" r="8" fill="none" stroke="#6bcb77" stroke-width="1.5"/>
+  <text x="109" y="179" font-family="Arial" font-weight="bold" font-size="8" fill="#6bcb77" text-anchor="middle">J</text>
+  <circle cx="149" cy="175" r="8" fill="none" stroke="#4d96ff" stroke-width="1.5"/>
+  <text x="149" y="179" font-family="Arial" font-weight="bold" font-size="8" fill="#4d96ff" text-anchor="middle">K</text>
+
+  <!-- Right side: title & info panel -->
+  <rect x="185" y="10" width="205" height="205" rx="8" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.08)" stroke-width="1"/>
+
+  <text x="287" y="48" font-family="Arial" font-weight="bold" font-size="26" fill="#4d96ff" text-anchor="middle">RHYTHM</text>
+  <text x="287" y="70" font-family="Arial" font-weight="bold" font-size="14" fill="rgba(255,255,255,0.8)" text-anchor="middle">F E V E R</text>
+
+  <!-- Divider -->
+  <line x1="205" y1="80" x2="375" y2="80" stroke="rgba(255,255,255,0.1)" stroke-width="1"/>
+
+  <!-- Judgment badges -->
+  <rect x="200" y="90"  width="60" height="20" rx="4" fill="rgba(255,217,61,0.2)" stroke="#ffd93d" stroke-width="1"/>
+  <text x="230" y="104" font-family="Arial" font-weight="bold" font-size="9" fill="#ffd93d" text-anchor="middle">PERFECT</text>
+
+  <rect x="268" y="90"  width="52" height="20" rx="4" fill="rgba(107,203,119,0.2)" stroke="#6bcb77" stroke-width="1"/>
+  <text x="294" y="104" font-family="Arial" font-weight="bold" font-size="9" fill="#6bcb77" text-anchor="middle">GREAT</text>
+
+  <rect x="200" y="117" width="44" height="20" rx="4" fill="rgba(77,150,255,0.2)" stroke="#4d96ff" stroke-width="1"/>
+  <text x="222" y="131" font-family="Arial" font-weight="bold" font-size="9" fill="#4d96ff" text-anchor="middle">GOOD</text>
+
+  <rect x="250" y="117" width="40" height="20" rx="4" fill="rgba(255,107,107,0.2)" stroke="#ff6b6b" stroke-width="1"/>
+  <text x="270" y="131" font-family="Arial" font-weight="bold" font-size="9" fill="#ff6b6b" text-anchor="middle">MISS</text>
+
+  <!-- Score mockup -->
+  <rect x="195" y="148" width="185" height="32" rx="4" fill="rgba(5,5,20,0.7)" stroke="rgba(255,255,255,0.07)" stroke-width="1"/>
+  <text x="205" y="161" font-family="monospace" font-size="8" fill="#888">SCORE</text>
+  <text x="375" y="161" font-family="monospace" font-weight="bold" font-size="11" fill="#fff" text-anchor="end">0012400</text>
+  <text x="205" y="174" font-family="monospace" font-size="8" fill="#888">COMBO</text>
+  <text x="375" y="174" font-family="monospace" font-weight="bold" font-size="11" fill="#ffd93d" text-anchor="end">32×</text>
+
+  <!-- BPM indicator -->
+  <text x="287" y="205" font-family="Arial" font-size="10" fill="#555" text-anchor="middle">BPM 128 · 4 LANES · Web Audio API</text>
+</svg>

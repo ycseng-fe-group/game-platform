@@ -41,3 +41,8 @@ export function formatPlayCount(count: number): string {
   if (count >= 1000) return `${(count / 1000).toFixed(1)}k`;
   return count.toString();
 }
+
+export function isNewGame(addedAt: string): boolean {
+  const diff = Date.now() - new Date(addedAt).getTime();
+  return diff <= 7 * 24 * 60 * 60 * 1000;
+}

@@ -2,7 +2,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { Game } from '@/types/game';
 import { Badge } from '@/components/ui/Badge';
-import { formatPlayCount } from '@/lib/games';
+import { formatPlayCount, isNewGame } from '@/lib/games';
 
 interface GameCardProps {
   game: Game;
@@ -20,10 +20,10 @@ export function GameCard({ game }: GameCardProps) {
             fill
             className="object-cover transition-transform duration-300 group-hover:scale-105"
           />
-          {game.featured && (
+          {isNewGame(game.addedAt) && (
             <div className="absolute top-2 left-2">
-              <span className="bg-[var(--color-accent)] text-white text-xs font-bold px-2 py-0.5 rounded">
-                인기
+              <span className="bg-emerald-500 text-white text-xs font-bold px-2 py-0.5 rounded">
+                NEW
               </span>
             </div>
           )}
