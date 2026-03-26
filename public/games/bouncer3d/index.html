@@ -1,0 +1,479 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>공굴리기 3D</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { background: #000; overflow: hidden; overscroll-behavior: none; touch-action: none; font-family: Arial, sans-serif; }
+
+  #ui {
+    position: fixed; top: 12px; left: 50%; transform: translateX(-50%);
+    display: flex; gap: 16px; pointer-events: none; z-index: 10;
+  }
+  .ui-chip {
+    background: rgba(0,0,0,0.55); border: 1px solid rgba(255,255,255,0.12);
+    color: #fff; font-size: 0.82rem; font-weight: bold;
+    padding: 4px 14px; border-radius: 20px;
+  }
+
+  /* 모바일 D-패드 */
+  #dpad {
+    position: fixed; bottom: 24px; right: 24px;
+    display: grid; grid-template-areas: ". u ." "l . r" ". d .";
+    grid-template-columns: 48px 48px 48px;
+    grid-template-rows: 48px 48px 48px;
+    gap: 4px; z-index: 10;
+  }
+  .dpad-btn {
+    background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.2);
+    border-radius: 10px; color: #fff; font-size: 1.2rem;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; -webkit-user-select: none; user-select: none;
+    active-opacity: 0.7;
+  }
+  .dpad-btn:active { background: rgba(255,255,255,0.3); }
+  #dpad-u { grid-area: u; }
+  #dpad-d { grid-area: d; }
+  #dpad-l { grid-area: l; }
+  #dpad-r { grid-area: r; }
+
+  /* 오버레이 */
+  #overlay {
+    position: fixed; inset: 0; background: rgba(0,0,0,0.82);
+    display: flex; flex-direction: column; align-items: center; justify-content: center;
+    gap: 14px; z-index: 20;
+  }
+  #overlay h2 { color: #fbbf24; font-size: 1.8rem; text-shadow: 0 0 20px #f59e0b88; }
+  #overlay p  { color: #94a3b8; font-size: 0.9rem; text-align: center; line-height: 1.7; }
+  #overlay button {
+    background: #7c3aed; color: #fff; border: none;
+    padding: 11px 32px; border-radius: 8px; cursor: pointer;
+    font-size: 1rem; font-weight: bold; box-shadow: 0 0 18px #7c3aed66;
+    margin-top: 4px;
+  }
+  #overlay button:hover { background: #6d28d9; }
+</style>
+</head>
+<body>
+
+<div id="ui">
+  <div class="ui-chip">스테이지 <strong id="ui-stage">1</strong></div>
+  <div class="ui-chip">⭐ <strong id="ui-score">0</strong></div>
+  <div class="ui-chip">⏱ <strong id="ui-time">0</strong>초</div>
+</div>
+
+<!-- 모바일 D-패드 -->
+<div id="dpad">
+  <div class="dpad-btn" id="dpad-u">▲</div>
+  <div class="dpad-btn" id="dpad-l">◀</div>
+  <div class="dpad-btn" id="dpad-r">▶</div>
+  <div class="dpad-btn" id="dpad-d">▼</div>
+</div>
+
+<div id="overlay">
+  <h2 id="ov-title">⚽ 공굴리기 3D</h2>
+  <p id="ov-sub">화살표 키 / D-패드로 공을 굴려<br>출구(✦)에 도달하세요!</p>
+  <button id="ov-btn">시작하기</button>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.min.js"></script>
+<script>
+/* ══════════════════════════════════════════════════════════
+   스테이지 맵  16×16
+   # = 벽   E = 슬라임   P = 공 시작   X = 출구
+   ══════════════════════════════════════════════════════════ */
+const MAPS = [
+  // Stage 1
+  ["################",
+   "#..............#",
+   "#.P..###.......#",
+   "#....#.#...E...#",
+   "#....#.#.......#",
+   "#....###.......#",
+   "#..............#",
+   "#.....E........#",
+   "#..........###.#",
+   "#..........#..##",
+   "#..E.......#...#",
+   "#..........#...#",
+   "#..........###.#",
+   "#..............#",
+   "#...........X..#",
+   "################"],
+  // Stage 2
+  ["################",
+   "#.E............#",
+   "#.####.######..#",
+   "#.#..E.#....#..#",
+   "#.#....#.##.#..#",
+   "#.#....#..#.#..#",
+   "#.#....####.#..#",
+   "#.P........E#..#",
+   "#.##########...#",
+   "#..............#",
+   "#...######.....#",
+   "#...#....#.E...#",
+   "#...#....#.....#",
+   "#...######.....#",
+   "#...........X..#",
+   "################"],
+  // Stage 3
+  ["################",
+   "#.P.E..........#",
+   "#.######.######",
+   "#.#....#.#.E..#",
+   "#.#.##.#.#.####",
+   "#.#.##.#.#.....#",
+   "#.#....#.#.###.#",
+   "#.######.#.#E#.#",
+   "#........#.#.#.#",
+   "#.######.#.###.#",
+   "#.#.E..#.#.....#",
+   "#.#....#.#######",
+   "#.######.......#",
+   "#....E.........#",
+   "#...........X..#",
+   "################"],
+];
+
+const GCOLS = 16, GROWS = 16;
+const HALF = (GCOLS - 1) / 2; // 7.5
+function gx(c) { return c - HALF; }
+function gz(r) { return r - HALF; }
+
+/* ──────────────────────────────────────────────────────────
+   Three.js 초기화
+   ────────────────────────────────────────────────────────── */
+const scene = new THREE.Scene();
+scene.background = new THREE.Color(0x060610);
+scene.fog = new THREE.Fog(0x060610, 20, 35);
+
+const camera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 100);
+camera.position.set(0, 15, 11);
+camera.lookAt(0, 0, 0);
+
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+document.body.appendChild(renderer.domElement);
+
+/* ── 조명 ───────────────────────────────────────────────── */
+scene.add(new THREE.AmbientLight(0x334466, 4));
+const sun = new THREE.DirectionalLight(0xfff8e0, 3.5);
+sun.position.set(4, 18, 8);
+sun.castShadow = true;
+sun.shadow.mapSize.setScalar(2048);
+Object.assign(sun.shadow.camera, { left: -12, right: 12, top: 12, bottom: -12, near: 0.5, far: 45 });
+scene.add(sun);
+const fillLight = new THREE.PointLight(0x4466cc, 2, 30);
+fillLight.position.set(-6, 8, -4);
+scene.add(fillLight);
+
+/* ── 재질 캐시 ──────────────────────────────────────────── */
+const MAT_WALL = [
+  new THREE.MeshStandardMaterial({ color: 0x7a5230, roughness: 0.85 }),
+  new THREE.MeshStandardMaterial({ color: 0x8b5e3c, roughness: 0.80 }),
+  new THREE.MeshStandardMaterial({ color: 0x6b4826, roughness: 0.90 }),
+];
+const MAT_FLOOR = new THREE.MeshStandardMaterial({ color: 0x0d0d1a, roughness: 0.95 });
+const MAT_SLIME = new THREE.MeshStandardMaterial({ color: 0x7c3aed, roughness: 0.4, emissive: 0x3b1a7a, emissiveIntensity: 0.3 });
+const MAT_BALL  = new THREE.MeshStandardMaterial({ color: 0xffffff, roughness: 0.15, metalness: 0.3, emissive: 0xaaaaff, emissiveIntensity: 0.25 });
+const MAT_EXIT  = new THREE.MeshStandardMaterial({ color: 0xfbbf24, emissive: 0xf59e0b, emissiveIntensity: 0.8, roughness: 0.3 });
+
+/* ── 씬 오브젝트 컨테이너 ─────────────────────────────── */
+const stageGroup = new THREE.Group();
+scene.add(stageGroup);
+
+let wallBoxes = []; // {minX, maxX, minZ, maxZ} AABB
+let slimes    = []; // {x, z, mesh, alive, vy, vx, vz}
+let exitPos   = null;
+let ballMesh, ballLight;
+let ballX = 0, ballZ = 0;
+let ballVX = 0, ballVZ = 0;
+
+/* ── 출구 파티클 시스템 ─────────────────────────────────── */
+const exitParticles = [];
+let exitMesh = null;
+
+/* ── 맵 빌드 ────────────────────────────────────────────── */
+function buildStage(idx) {
+  // 기존 제거
+  while (stageGroup.children.length) stageGroup.remove(stageGroup.children[0]);
+  wallBoxes = []; slimes = []; exitPos = null; exitMesh = null;
+  exitParticles.length = 0;
+  if (ballMesh)  { scene.remove(ballMesh);  ballMesh = null; }
+  if (ballLight) { scene.remove(ballLight); ballLight = null; }
+
+  // 바닥
+  const floor = new THREE.Mesh(new THREE.PlaneGeometry(GCOLS, GROWS), MAT_FLOOR);
+  floor.rotation.x = -Math.PI / 2;
+  floor.receiveShadow = true;
+  stageGroup.add(floor);
+  stageGroup.add(new THREE.GridHelper(GCOLS, GCOLS, 0x111128, 0x111128));
+
+  const map = MAPS[idx];
+  for (let r = 0; r < GROWS; r++) {
+    for (let c = 0; c < GCOLS; c++) {
+      const ch = (map[r] || '')[c] || '#';
+      const wx = gx(c), wz = gz(r);
+
+      if (ch === '#') {
+        const mat = MAT_WALL[(r + c) % MAT_WALL.length];
+        const mesh = new THREE.Mesh(new THREE.BoxGeometry(1, 1.4, 1), mat);
+        mesh.position.set(wx, 0.7, wz);
+        mesh.castShadow = true;
+        mesh.receiveShadow = true;
+        stageGroup.add(mesh);
+        wallBoxes.push({ minX: wx - 0.5, maxX: wx + 0.5, minZ: wz - 0.5, maxZ: wz + 0.5 });
+
+      } else if (ch === 'E') {
+        const g = new THREE.Group();
+        // 몸통
+        const body = new THREE.Mesh(new THREE.SphereGeometry(0.42, 10, 8), MAT_SLIME.clone());
+        body.position.y = 0.42; body.castShadow = true;
+        g.add(body);
+        // 눈
+        [[-0.14, 0.62, 0.36], [0.14, 0.62, 0.36]].forEach(([ex, ey, ez]) => {
+          const eye = new THREE.Mesh(new THREE.SphereGeometry(0.09, 6, 6),
+            new THREE.MeshBasicMaterial({ color: 0xffffff }));
+          eye.position.set(ex, ey, ez); g.add(eye);
+          const pupil = new THREE.Mesh(new THREE.SphereGeometry(0.05, 5, 5),
+            new THREE.MeshBasicMaterial({ color: 0x111111 }));
+          pupil.position.set(ex, ey, ez + 0.07); g.add(pupil);
+        });
+        g.position.set(wx, 0, wz);
+        stageGroup.add(g);
+        slimes.push({ x: wx, z: wz, mesh: g, alive: true, vy: 0, vx: 0, vz: 0, phase: Math.random() * Math.PI * 2 });
+
+      } else if (ch === 'X') {
+        exitPos = { x: wx, z: wz };
+        // 출구 발광 타일
+        const tile = new THREE.Mesh(new THREE.BoxGeometry(0.9, 0.08, 0.9), MAT_EXIT);
+        tile.position.set(wx, 0.04, wz);
+        stageGroup.add(tile);
+        exitMesh = tile;
+        // 별 모양 기둥
+        const star = new THREE.Mesh(new THREE.CylinderGeometry(0.1, 0.1, 1.2, 6), MAT_EXIT);
+        star.position.set(wx, 0.6, wz);
+        stageGroup.add(star);
+        // 출구 조명
+        const el = new THREE.PointLight(0xfbbf24, 3, 4);
+        el.position.set(wx, 1.5, wz);
+        stageGroup.add(el);
+
+      } else if (ch === 'P') {
+        ballX = wx; ballZ = wz;
+      }
+    }
+  }
+
+  // 공
+  ballVX = 0; ballVZ = 0;
+  ballMesh = new THREE.Mesh(new THREE.SphereGeometry(0.32, 14, 14), MAT_BALL.clone());
+  ballMesh.position.set(ballX, 0.32, ballZ);
+  ballMesh.castShadow = true;
+  scene.add(ballMesh);
+  ballLight = new THREE.PointLight(0xaaaaff, 2.5, 5);
+  scene.add(ballLight);
+}
+
+/* ── 키 입력 ────────────────────────────────────────────── */
+const keys = { ArrowUp: false, ArrowDown: false, ArrowLeft: false, ArrowRight: false,
+               w: false, s: false, a: false, d: false };
+window.addEventListener('keydown', e => { if (e.key in keys) { keys[e.key] = true; e.preventDefault(); } });
+window.addEventListener('keyup',   e => { if (e.key in keys) keys[e.key] = false; });
+
+// D-패드
+function dpadPress(key, val) {
+  keys[key] = val;
+}
+['u','d','l','r'].forEach(dir => {
+  const el = document.getElementById('dpad-' + dir);
+  const key = { u:'ArrowUp', d:'ArrowDown', l:'ArrowLeft', r:'ArrowRight' }[dir];
+  el.addEventListener('touchstart', e => { dpadPress(key, true);  e.preventDefault(); }, { passive: false });
+  el.addEventListener('touchend',   e => { dpadPress(key, false); e.preventDefault(); }, { passive: false });
+  el.addEventListener('mousedown',  () => dpadPress(key, true));
+  el.addEventListener('mouseup',    () => dpadPress(key, false));
+});
+
+/* ── 물리 ───────────────────────────────────────────────── */
+const BALL_R    = 0.32;
+const ACCEL     = 0.012;
+const MAX_SPEED = 0.10;
+const FRICTION  = 0.88;
+
+function resolveAABB(bx, bz, vx, vz, box) {
+  // 공의 다음 위치에서 AABB와 겹치면 반사
+  const nx = Math.max(box.minX, Math.min(bx, box.maxX));
+  const nz = Math.max(box.minZ, Math.min(bz, box.maxZ));
+  const dx = bx - nx, dz = bz - nz;
+  const dist = Math.sqrt(dx * dx + dz * dz);
+  if (dist >= BALL_R || dist < 0.0001) return { bx, bz, vx, vz, hit: false };
+  const nx2 = dx / dist, nz2 = dz / dist;
+  const dot = vx * nx2 + vz * nz2;
+  return {
+    bx: nx + nx2 * BALL_R * 1.01,
+    bz: nz + nz2 * BALL_R * 1.01,
+    vx: vx - 2 * dot * nx2,
+    vz: vz - 2 * dot * nz2,
+    hit: true,
+  };
+}
+
+/* ── 슬라임 피격 이펙트 ─────────────────────────────────── */
+function hitSlime(slime) {
+  slime.alive = false;
+  slime.vy = 0.14 + Math.random() * 0.06;
+  slime.vx = (Math.random() - 0.5) * 0.1;
+  slime.vz = (Math.random() - 0.5) * 0.1;
+  score += 50;
+  document.getElementById('ui-score').textContent = score;
+}
+
+/* ── 게임 상태 ──────────────────────────────────────────── */
+let gameState = 'menu';
+let stageIdx = 0, score = 0, elapsed = 0;
+
+function startStage(idx) {
+  stageIdx = idx;
+  elapsed = 0;
+  buildStage(idx);
+  gameState = 'playing';
+  document.getElementById('ui-stage').textContent = idx + 1;
+  document.getElementById('overlay').style.display = 'none';
+}
+
+function showOverlay(title, sub, btn, fn) {
+  document.getElementById('ov-title').textContent = title;
+  document.getElementById('ov-sub').textContent   = sub;
+  document.getElementById('ov-btn').textContent   = btn;
+  document.getElementById('ov-btn').onclick       = fn;
+  document.getElementById('overlay').style.display = 'flex';
+}
+
+document.getElementById('ov-btn').onclick = () => { score = 0; startStage(0); };
+
+/* ── 카메라 ─────────────────────────────────────────────── */
+const camTarget = new THREE.Vector3(0, 15, 11);
+function updateCamera() {
+  camTarget.set(ballX, 15, ballZ + 10);
+  camera.position.lerp(camTarget, 0.07);
+  camera.lookAt(ballX, 0, ballZ - 1);
+}
+
+/* ── 메인 루프 ──────────────────────────────────────────── */
+const clock = new THREE.Clock();
+function animate() {
+  requestAnimationFrame(animate);
+  const dt = Math.min(clock.getDelta(), 0.05);
+
+  if (gameState === 'playing') {
+    elapsed += dt;
+    document.getElementById('ui-time').textContent = Math.floor(elapsed);
+
+    /* 입력 → 가속 */
+    if (keys.ArrowUp    || keys.w) ballVZ -= ACCEL;
+    if (keys.ArrowDown  || keys.s) ballVZ += ACCEL;
+    if (keys.ArrowLeft  || keys.a) ballVX -= ACCEL;
+    if (keys.ArrowRight || keys.d) ballVX += ACCEL;
+
+    /* 속도 제한 & 마찰 */
+    const spd = Math.sqrt(ballVX * ballVX + ballVZ * ballVZ);
+    if (spd > MAX_SPEED) { ballVX = ballVX / spd * MAX_SPEED; ballVZ = ballVZ / spd * MAX_SPEED; }
+    ballVX *= FRICTION;
+    ballVZ *= FRICTION;
+
+    /* 위치 갱신 (서브스텝) */
+    const SUB = 3;
+    for (let s = 0; s < SUB; s++) {
+      ballX += ballVX / SUB;
+      ballZ += ballVZ / SUB;
+
+      /* 필드 경계 */
+      const FH = HALF - BALL_R;
+      if (ballX < -FH) { ballX = -FH; ballVX =  Math.abs(ballVX); }
+      if (ballX >  FH) { ballX =  FH; ballVX = -Math.abs(ballVX); }
+      if (ballZ < -FH) { ballZ = -FH; ballVZ =  Math.abs(ballVZ); }
+      if (ballZ >  FH) { ballZ =  FH; ballVZ = -Math.abs(ballVZ); }
+
+      /* 벽 충돌 */
+      for (const box of wallBoxes) {
+        const r = resolveAABB(ballX, ballZ, ballVX, ballVZ, box);
+        if (r.hit) { ballX = r.bx; ballZ = r.bz; ballVX = r.vx; ballVZ = r.vz; }
+      }
+    }
+
+    /* 슬라임 충돌 */
+    for (const sl of slimes) {
+      if (!sl.alive) continue;
+      const dx = ballX - sl.x, dz = ballZ - sl.z;
+      if (Math.sqrt(dx * dx + dz * dz) < BALL_R + 0.42) hitSlime(sl);
+    }
+
+    /* 출구 도달 */
+    if (exitPos) {
+      const dx = ballX - exitPos.x, dz = ballZ - exitPos.z;
+      if (Math.sqrt(dx * dx + dz * dz) < 0.7) {
+        gameState = 'clear';
+        const bonus = Math.max(0, 300 - Math.floor(elapsed) * 2);
+        score += bonus;
+        document.getElementById('ui-score').textContent = score;
+        if (stageIdx < MAPS.length - 1) {
+          showOverlay(`✨ 스테이지 ${stageIdx + 1} 클리어!`,
+            `시간 보너스 +${bonus}점\n누적 점수: ${score}점`,
+            '다음 스테이지', () => startStage(stageIdx + 1));
+        } else {
+          showOverlay('🏆 전체 클리어!',
+            `최종 점수: ${score}점\n수고했습니다!`,
+            '처음부터', () => { score = 0; startStage(0); });
+        }
+      }
+    }
+
+    /* 공 메쉬 */
+    if (ballMesh) {
+      ballMesh.position.set(ballX, BALL_R, ballZ);
+      ballMesh.rotation.x += ballVZ * 3;
+      ballMesh.rotation.z -= ballVX * 3;
+      ballLight.position.set(ballX, BALL_R + 0.4, ballZ);
+    }
+
+    /* 슬라임 물리 */
+    const G = -0.01;
+    slimes.forEach(sl => {
+      if (sl.alive) {
+        // 호버 애니메이션
+        sl.mesh.position.y = Math.sin(clock.getElapsedTime() * 2 + sl.phase) * 0.07;
+        return;
+      }
+      if (sl.mesh.position.y < -4) return;
+      sl.vy += G;
+      sl.mesh.position.x += sl.vx;
+      sl.mesh.position.y += sl.vy;
+      sl.mesh.position.z += sl.vz;
+      sl.mesh.rotation.z += 0.12;
+      if (sl.mesh.position.y < -4) scene.remove(sl.mesh);
+    });
+
+    /* 출구 회전 */
+    if (exitMesh) exitMesh.rotation.y += 0.02;
+
+    updateCamera();
+  }
+
+  renderer.render(scene, camera);
+}
+animate();
+
+window.addEventListener('resize', () => {
+  camera.aspect = innerWidth / innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(innerWidth, innerHeight);
+});
+</script>
+</body>
+</html>

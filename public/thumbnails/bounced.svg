@@ -1,0 +1,77 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="225" viewBox="0 0 400 225">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#050510"/>
+      <stop offset="100%" stop-color="#0a0a1e"/>
+    </linearGradient>
+    <radialGradient id="ballGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#80c8ff" stop-opacity="0.6"/>
+      <stop offset="100%" stop-color="#80c8ff" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="ball" cx="35%" cy="32%" r="60%">
+      <stop offset="0%" stop-color="#ffffff"/>
+      <stop offset="35%" stop-color="#80c8ff"/>
+      <stop offset="100%" stop-color="#1050c0"/>
+    </radialGradient>
+    <radialGradient id="goalGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#ffd700" stop-opacity="0.7"/>
+      <stop offset="100%" stop-color="#ffd700" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+
+  <!-- Background -->
+  <rect width="400" height="225" fill="url(#bg)"/>
+
+  <!-- Grid lines (subtle) -->
+  <line x1="40" y1="0"   x2="40"  y2="225" stroke="#0f0f28" stroke-width="0.6"/>
+  <line x1="80" y1="0"   x2="80"  y2="225" stroke="#0f0f28" stroke-width="0.6"/>
+  <line x1="120" y1="0"  x2="120" y2="225" stroke="#0f0f28" stroke-width="0.6"/>
+  <line x1="160" y1="0"  x2="160" y2="225" stroke="#0f0f28" stroke-width="0.6"/>
+  <line x1="200" y1="0"  x2="200" y2="225" stroke="#0f0f28" stroke-width="0.6"/>
+  <line x1="240" y1="0"  x2="240" y2="225" stroke="#0f0f28" stroke-width="0.6"/>
+  <line x1="280" y1="0"  x2="280" y2="225" stroke="#0f0f28" stroke-width="0.6"/>
+  <line x1="320" y1="0"  x2="320" y2="225" stroke="#0f0f28" stroke-width="0.6"/>
+  <line x1="360" y1="0"  x2="360" y2="225" stroke="#0f0f28" stroke-width="0.6"/>
+  <line x1="0"  y1="45"  x2="400" y2="45"  stroke="#0f0f28" stroke-width="0.6"/>
+  <line x1="0"  y1="90"  x2="400" y2="90"  stroke="#0f0f28" stroke-width="0.6"/>
+  <line x1="0"  y1="135" x2="400" y2="135" stroke="#0f0f28" stroke-width="0.6"/>
+  <line x1="0"  y1="180" x2="400" y2="180" stroke="#0f0f28" stroke-width="0.6"/>
+
+  <!-- Outer walls -->
+  <rect x="10"  y="10"  width="380" height="8"  fill="#2a5aaf"/>
+  <rect x="10"  y="207" width="380" height="8"  fill="#2a5aaf"/>
+  <rect x="10"  y="10"  width="8"   height="205" fill="#2a5aaf"/>
+  <rect x="382" y="10"  width="8"   height="205" fill="#2a5aaf"/>
+
+  <!-- Platform tiles -->
+  <rect x="60"  y="100" width="80"  height="10" rx="2" fill="#1a3a6f"/>
+  <rect x="60"  y="100" width="80"  height="3"  rx="1" fill="#2a5aaf"/>
+  <rect x="260" y="130" width="80"  height="10" rx="2" fill="#1a3a6f"/>
+  <rect x="260" y="130" width="80"  height="3"  rx="1" fill="#2a5aaf"/>
+  <rect x="140" y="155" width="120" height="10" rx="2" fill="#1a3a6f"/>
+  <rect x="140" y="155" width="120" height="3"  rx="1" fill="#2a5aaf"/>
+
+  <!-- Goal tile (top-right) -->
+  <circle cx="345" cy="42" r="22" fill="url(#goalGlow)" opacity="0.9"/>
+  <rect x="325" y="22" width="35" height="35" rx="3" fill="#ff9900" opacity="0.95"/>
+  <text x="342" y="44" font-family="Arial" font-size="20" text-anchor="middle" dominant-baseline="middle" fill="white">★</text>
+
+  <!-- Ball trail particles -->
+  <circle cx="120" cy="170" r="7" fill="#80c8ff" opacity="0.12"/>
+  <circle cx="138" cy="148" r="6" fill="#80c8ff" opacity="0.2"/>
+  <circle cx="158" cy="125" r="6" fill="#80c8ff" opacity="0.28"/>
+  <circle cx="178" cy="105" r="7" fill="#80c8ff" opacity="0.37"/>
+  <circle cx="200" cy="88"  r="7" fill="#80c8ff" opacity="0.45"/>
+  <circle cx="224" cy="72"  r="8" fill="#80c8ff" opacity="0.52"/>
+  <circle cx="252" cy="58"  r="8" fill="#80c8ff" opacity="0.60"/>
+
+  <!-- Ball glow -->
+  <circle cx="280" cy="47" r="22" fill="url(#ballGlow)"/>
+  <!-- Ball body -->
+  <circle cx="280" cy="47" r="13" fill="url(#ball)"/>
+  <!-- Ball shine -->
+  <circle cx="275" cy="42" r="4.5" fill="rgba(255,255,255,0.65)"/>
+
+  <!-- Title -->
+  <text x="200" y="215" font-family="Arial" font-weight="bold" font-size="15" fill="#80c8ff" text-anchor="middle">⚽ BOUNCED</text>
+</svg>

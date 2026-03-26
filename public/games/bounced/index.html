@@ -1,0 +1,750 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+  <title>Bounced</title>
+  <style>
+    *{margin:0;padding:0;box-sizing:border-box}
+    html,body{
+      background:#09090f;
+      display:flex;align-items:center;justify-content:center;
+      width:100%;height:100%;overflow:hidden;touch-action:none
+    }
+    #c{
+      display:block;touch-action:none;
+      width:min(100vw,calc(100vh * 480 / 600));
+      aspect-ratio:480/600;height:auto;
+      image-rendering:pixelated
+    }
+  </style>
+</head>
+<body>
+<canvas id="c" width="480" height="600"></canvas>
+<script>
+'use strict';
+// ═══════════════════════════════════════════════════════════
+//  BOUNCED  –  Nokia-style physics ball game
+// ═══════════════════════════════════════════════════════════
+const CV = document.getElementById('c');
+const cx = CV.getContext('2d');
+const CW = 480, CH = 600;
+const TILE = 30, COLS = 16, ROWS = 20;
+
+// ── Tile types ──
+const T_EMPTY = 0, T_WALL = 1, T_START = 2, T_GOAL = 3;
+
+// ── Physics ──
+const GRAVITY       = 0.32;
+const BOUNCE        = 0.76;
+const H_ACCEL       = 0.55;
+const MAX_VX        = 7;
+const FRICTION_GND  = 0.80;
+const FRICTION_AIR  = 0.995;
+const BALL_R        = 10;
+const WALL_FRICTION = 0.70;   // vy multiplier when wall-sliding
+const WALL_JUMP_VX  = 6;
+const WALL_JUMP_VY  = -9;
+const INIT_VY       = -13;    // upward pop at stage start
+
+// ── Stage Maps (16×20) ──
+// 0=empty 1=wall 2=start 3=goal
+const MAPS = [
+  // ── Stage 1 ── simple horizontal+vertical, goal upper-right
+  [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,3,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,1,1,1,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,1,1,1,1,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,1,1,1,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,1,1,0,0,0,0,0,0,1,1,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,2,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  ],
+  // ── Stage 2 ── mid-height goal, trickier platforms
+  [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,3,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,1,1,1,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,1,1,0,0,0,0,0,0,1,1,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,1,0,0,0,0,0,0,0,0,0,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,1,1,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,1,1,1,0,0,0,0,1,1,1,0,0,1],
+    [1,0,0,0,0,0,0,0,2,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  ],
+  // ── Stage 3 ── narrow corridors, wall-climb heavily needed
+  [
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,3,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,1,1,1,0,0,0,0,0,0,1],
+    [1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1],
+    [1,0,0,1,0,0,0,0,0,0,0,0,1,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,1,1,0,0,1,1,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,1,1,0,0,0,0,0,0,0,0,0,0,1,1,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,1,1,1,1,1,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,1,1,0,0,0,0,0,0,0,0,1,1,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1],
+    [1,0,0,0,0,0,0,0,2,0,0,0,0,0,0,1],
+    [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1],
+  ],
+];
+
+// ── Wall tile color themes per stage ──
+const WALL_COLORS = [
+  { base:'#1a3a6f', light:'#2a5aaf', dark:'#0e2545', inner:'#12285a' },
+  { base:'#3a1a6f', light:'#5a2aaf', dark:'#250e45', inner:'#28125a' },
+  { base:'#1a5a3a', light:'#2aaf5a', dark:'#0e4528', inner:'#125a28' },
+];
+
+// ══════════════════════════════════════════
+//  GAME STATE
+// ══════════════════════════════════════════
+let stage = 0;
+let ball = { x:0, y:0, vx:0, vy:0 };
+let particles = [];
+let keys = { left:false, right:false };
+let onGround = false;
+let wallLeft = false, wallRight = false;
+let gameState = 'title'; // title | playing | stageclear | win
+let score = 0;
+let elapsed = 0;
+let raf = 0;
+let prevTime = 0;
+// For wall-jump: track if key was freshly pressed this frame
+let prevKeys = { left:false, right:false };
+// Touch areas
+let touchLeft = false, touchRight = false;
+
+// ══════════════════════════════════════════
+//  MAP HELPERS
+// ══════════════════════════════════════════
+function tileAt(r, c) {
+  if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return T_WALL;
+  return MAPS[stage][r][c];
+}
+function solid(t) { return t === T_WALL; }
+
+// ══════════════════════════════════════════
+//  STAGE INIT
+// ══════════════════════════════════════════
+function initStage(s) {
+  stage = s;
+  particles = [];
+  keys = { left:false, right:false };
+  prevKeys = { left:false, right:false };
+  touchLeft = false; touchRight = false;
+  onGround = false; wallLeft = false; wallRight = false;
+  gameState = 'playing';
+  elapsed = 0;
+
+  // Find start tile
+  let sx = COLS / 2 * TILE, sy = (ROWS - 2) * TILE;
+  for (let r = 0; r < ROWS; r++)
+    for (let c = 0; c < COLS; c++)
+      if (MAPS[s][r][c] === T_START) { sx = c * TILE + TILE / 2; sy = r * TILE + TILE / 2; }
+  ball = { x: sx, y: sy, vx: 0, vy: INIT_VY };
+}
+
+// ══════════════════════════════════════════
+//  PHYSICS UPDATE
+// ══════════════════════════════════════════
+function update(dt) {
+  if (gameState !== 'playing') return;
+  elapsed += dt;
+
+  const R = BALL_R;
+  const kL = keys.left  || touchLeft;
+  const kR = keys.right || touchRight;
+
+  // ── Particle trail ──
+  particles.push({ x: ball.x, y: ball.y, life: 1.0 });
+  for (let i = particles.length - 1; i >= 0; i--) {
+    particles[i].life -= 0.055;
+    if (particles[i].life <= 0) particles.splice(i, 1);
+  }
+
+  // ── Horizontal acceleration ──
+  if (kL) ball.vx -= H_ACCEL;
+  if (kR) ball.vx += H_ACCEL;
+  ball.vx = Math.max(-MAX_VX, Math.min(MAX_VX, ball.vx));
+
+  // ── Wall-slide: slow fall when pressing into wall ──
+  const sliding = (wallLeft && kL) || (wallRight && kR);
+  if (sliding && ball.vy > 0) {
+    ball.vy *= WALL_FRICTION;
+    if (ball.vy < 0.1) ball.vy = 0;
+  }
+
+  // ── Gravity ──
+  ball.vy += GRAVITY;
+
+  // ── Friction ──
+  if (onGround) ball.vx *= FRICTION_GND;
+  else          ball.vx *= FRICTION_AIR;
+
+  // Reset contact flags
+  onGround = false; wallLeft = false; wallRight = false;
+
+  // ────────────────────────────────────────
+  //  Move X + resolve horizontal collision
+  // ────────────────────────────────────────
+  ball.x += ball.vx;
+  {
+    const lc = Math.floor((ball.x - R) / TILE);
+    const rc = Math.floor((ball.x + R - 0.01) / TILE);
+    const tr = Math.floor((ball.y - R + 1) / TILE);
+    const br = Math.floor((ball.y + R - 1.01) / TILE);
+
+    const hitLeft  = solid(tileAt(tr, lc)) || solid(tileAt(br, lc));
+    const hitRight = solid(tileAt(tr, rc)) || solid(tileAt(br, rc));
+
+    if (hitLeft) {
+      ball.x = (lc + 1) * TILE + R;
+      if (ball.vx < 0) {
+        // pressing into left wall → wall-jump boost
+        const boost = kL ? WALL_JUMP_VY * 0.5 : 0;
+        ball.vx = Math.abs(ball.vx) * BOUNCE;
+        ball.vy += boost;
+        wallLeft = true;
+      }
+    }
+    if (hitRight) {
+      ball.x = rc * TILE - R;
+      if (ball.vx > 0) {
+        const boost = kR ? WALL_JUMP_VY * 0.5 : 0;
+        ball.vx = -Math.abs(ball.vx) * BOUNCE;
+        ball.vy += boost;
+        wallRight = true;
+      }
+    }
+  }
+
+  // ────────────────────────────────────────
+  //  Wall-jump: pressing AWAY from wall
+  // ────────────────────────────────────────
+  const justPressedR = kR && !prevKeys.right && !touchRight || kR && touchRight && !prevKeys.touchRight;
+  const justPressedL = kL && !prevKeys.left  && !touchLeft  || kL && touchLeft  && !prevKeys.touchLeft;
+  if (wallLeft  && kR && justPressedR) { ball.vx =  WALL_JUMP_VX; ball.vy = WALL_JUMP_VY; }
+  if (wallRight && kL && justPressedL) { ball.vx = -WALL_JUMP_VX; ball.vy = WALL_JUMP_VY; }
+
+  // ────────────────────────────────────────
+  //  Move Y + resolve vertical collision
+  // ────────────────────────────────────────
+  ball.y += ball.vy;
+  {
+    const lc = Math.floor((ball.x - R + 1) / TILE);
+    const rc = Math.floor((ball.x + R - 1.01) / TILE);
+    const tr = Math.floor((ball.y - R) / TILE);
+    const br = Math.floor((ball.y + R - 0.01) / TILE);
+
+    const hitTop    = solid(tileAt(tr, lc)) || solid(tileAt(tr, rc));
+    const hitBottom = solid(tileAt(br, lc)) || solid(tileAt(br, rc));
+
+    if (hitTop && ball.vy < 0) {
+      ball.y = (tr + 1) * TILE + R;
+      ball.vy = Math.abs(ball.vy) * BOUNCE;
+    }
+    if (hitBottom && ball.vy > 0) {
+      ball.y = br * TILE - R;
+      ball.vy = -ball.vy * BOUNCE;
+      if (Math.abs(ball.vy) < 1.2) { ball.vy = 0; onGround = true; }
+    }
+  }
+
+  // ── Persistent wall-contact sensing ──
+  {
+    const tr = Math.floor((ball.y - R + 2) / TILE);
+    const br = Math.floor((ball.y + R - 2.01) / TILE);
+    if (solid(tileAt(tr, Math.floor((ball.x - R - 1) / TILE))) ||
+        solid(tileAt(br, Math.floor((ball.x - R - 1) / TILE)))) wallLeft = true;
+    if (solid(tileAt(tr, Math.floor((ball.x + R) / TILE))) ||
+        solid(tileAt(br, Math.floor((ball.x + R) / TILE)))) wallRight = true;
+  }
+
+  // ── Ground sensing ──
+  {
+    const lc = Math.floor((ball.x - R + 2) / TILE);
+    const rc = Math.floor((ball.x + R - 2.01) / TILE);
+    const br = Math.floor((ball.y + R + 1) / TILE);
+    if (solid(tileAt(br, lc)) || solid(tileAt(br, rc))) onGround = true;
+  }
+
+  // ── Goal check ──
+  const gc = Math.floor(ball.x / TILE), gr = Math.floor(ball.y / TILE);
+  if (tileAt(gr, gc) === T_GOAL) {
+    const bonus = Math.max(0, Math.round(2000 - elapsed * 8));
+    score += bonus + 500;
+    gameState = (stage + 1 < MAPS.length) ? 'stageclear' : 'win';
+  }
+
+  // Update prev key state
+  prevKeys = { left: kL, right: kR,
+               touchLeft: touchLeft, touchRight: touchRight };
+}
+
+// ══════════════════════════════════════════
+//  RENDERING
+// ══════════════════════════════════════════
+let goalPulse = 0;
+
+function render(ts) {
+  goalPulse = ts * 0.003;
+  cx.clearRect(0, 0, CW, CH);
+
+  // Background gradient
+  const bg = cx.createLinearGradient(0, 0, 0, CH);
+  bg.addColorStop(0, '#050510');
+  bg.addColorStop(1, '#0a0a1e');
+  cx.fillStyle = bg;
+  cx.fillRect(0, 0, CW, CH);
+
+  if (gameState === 'title') { drawTitle(); return; }
+
+  drawMap();
+  drawParticles();
+  drawBall();
+  drawHUD();
+  drawTouchButtons();
+
+  if (gameState === 'stageclear') drawStageClear();
+  if (gameState === 'win')        drawWin();
+}
+
+// ── Map ──
+function drawMap() {
+  const pal = WALL_COLORS[stage];
+  const map = MAPS[stage];
+  for (let r = 0; r < ROWS; r++) {
+    for (let c = 0; c < COLS; c++) {
+      const t = map[r][c];
+      const x = c * TILE, y = r * TILE;
+      if (t === T_WALL) {
+        cx.fillStyle = pal.base;
+        cx.fillRect(x, y, TILE, TILE);
+        // inner face
+        cx.fillStyle = pal.inner;
+        cx.fillRect(x + 3, y + 3, TILE - 6, TILE - 6);
+        // top-left bevel (light)
+        cx.fillStyle = pal.light;
+        cx.fillRect(x, y, TILE, 3);
+        cx.fillRect(x, y, 3, TILE);
+        // bottom-right bevel (dark)
+        cx.fillStyle = pal.dark;
+        cx.fillRect(x, y + TILE - 3, TILE, 3);
+        cx.fillRect(x + TILE - 3, y, 3, TILE);
+      } else if (t === T_GOAL) {
+        drawGoalTile(x, y);
+      }
+    }
+  }
+}
+
+function drawGoalTile(x, y) {
+  const pulse = 0.7 + 0.3 * Math.sin(goalPulse * 3);
+  // Glow
+  cx.save();
+  cx.globalAlpha = 0.5 * pulse;
+  const grd = cx.createRadialGradient(x + 15, y + 15, 2, x + 15, y + 15, 22);
+  grd.addColorStop(0, '#ffd700');
+  grd.addColorStop(1, 'rgba(255,180,0,0)');
+  cx.fillStyle = grd;
+  cx.fillRect(x - 8, y - 8, TILE + 16, TILE + 16);
+  cx.restore();
+
+  // Tile
+  cx.fillStyle = `rgba(255,${Math.floor(180 + 60 * pulse)},0,0.9)`;
+  cx.fillRect(x + 1, y + 1, TILE - 2, TILE - 2);
+
+  // Star
+  cx.font = `${TILE * 0.65}px sans-serif`;
+  cx.textAlign = 'center';
+  cx.textBaseline = 'middle';
+  cx.fillStyle = '#fff';
+  cx.fillText('★', x + TILE / 2, y + TILE / 2 + 1);
+}
+
+// ── Particles ──
+function drawParticles() {
+  for (const p of particles) {
+    const alpha = p.life * 0.55;
+    const r = BALL_R * 0.75 * p.life;
+    cx.beginPath();
+    cx.arc(p.x, p.y, Math.max(1, r), 0, Math.PI * 2);
+    cx.fillStyle = `rgba(80,180,255,${alpha})`;
+    cx.fill();
+  }
+}
+
+// ── Ball ──
+function drawBall() {
+  const x = ball.x, y = ball.y, R = BALL_R;
+  // Outer glow
+  cx.save();
+  cx.globalAlpha = 0.35;
+  const glow = cx.createRadialGradient(x, y, R * 0.5, x, y, R * 2.2);
+  glow.addColorStop(0, '#60b8ff');
+  glow.addColorStop(1, 'rgba(60,120,255,0)');
+  cx.fillStyle = glow;
+  cx.beginPath();
+  cx.arc(x, y, R * 2.2, 0, Math.PI * 2);
+  cx.fill();
+  cx.restore();
+
+  // Ball body
+  const body = cx.createRadialGradient(x - R * 0.3, y - R * 0.3, R * 0.1, x, y, R);
+  body.addColorStop(0, '#ffffff');
+  body.addColorStop(0.35, '#80c8ff');
+  body.addColorStop(1, '#1050c0');
+  cx.beginPath();
+  cx.arc(x, y, R, 0, Math.PI * 2);
+  cx.fillStyle = body;
+  cx.fill();
+
+  // Shine
+  cx.beginPath();
+  cx.arc(x - R * 0.3, y - R * 0.32, R * 0.32, 0, Math.PI * 2);
+  cx.fillStyle = 'rgba(255,255,255,0.65)';
+  cx.fill();
+
+  // Wall-climb indicator
+  if (wallLeft || wallRight) {
+    cx.save();
+    cx.globalAlpha = 0.6;
+    cx.strokeStyle = '#ffd700';
+    cx.lineWidth = 2;
+    cx.beginPath();
+    cx.arc(x, y, R + 3, 0, Math.PI * 2);
+    cx.stroke();
+    cx.restore();
+  }
+}
+
+// ── HUD ──
+function drawHUD() {
+  // Bar background
+  cx.fillStyle = 'rgba(0,0,0,0.55)';
+  cx.fillRect(0, 0, CW, 36);
+
+  cx.font = 'bold 14px Arial';
+  cx.textBaseline = 'middle';
+
+  // Stage
+  cx.fillStyle = '#80c8ff';
+  cx.textAlign = 'left';
+  cx.fillText(`STAGE ${stage + 1}`, 10, 18);
+
+  // Score
+  cx.fillStyle = '#ffd700';
+  cx.textAlign = 'center';
+  cx.fillText(`SCORE: ${score.toLocaleString()}`, CW / 2, 18);
+
+  // Time
+  cx.fillStyle = '#aaffaa';
+  cx.textAlign = 'right';
+  cx.fillText(`${elapsed.toFixed(1)}s`, CW - 10, 18);
+
+  // Wall-climb hint (first stage only)
+  if (stage === 0 && elapsed < 8) {
+    const alpha = Math.min(1, elapsed < 6 ? 1 : (8 - elapsed) / 2);
+    cx.save();
+    cx.globalAlpha = alpha;
+    cx.font = '11px Arial';
+    cx.fillStyle = '#ffdd80';
+    cx.textAlign = 'center';
+    cx.fillText('← → 방향키 조작  |  벽에 붙어 반대 방향키 → 벽 점프!', CW / 2, CH - 10);
+    cx.restore();
+  }
+}
+
+// ── Touch buttons ──
+function drawTouchButtons() {
+  const BTN_W = 90, BTN_H = 50, BTN_Y = CH - 62, MARGIN = 14;
+  const btnStyle = (active) => active
+    ? 'rgba(255,255,255,0.28)'
+    : 'rgba(255,255,255,0.10)';
+
+  cx.save();
+  cx.font = 'bold 24px Arial';
+  cx.textAlign = 'center';
+  cx.textBaseline = 'middle';
+  const r = 10;
+
+  // Left button
+  const lx = MARGIN;
+  cx.fillStyle = btnStyle(touchLeft);
+  roundRect(cx, lx, BTN_Y, BTN_W, BTN_H, r);
+  cx.fill();
+  cx.strokeStyle = 'rgba(255,255,255,0.3)';
+  cx.lineWidth = 1.5;
+  roundRect(cx, lx, BTN_Y, BTN_W, BTN_H, r);
+  cx.stroke();
+  cx.fillStyle = touchLeft ? '#fff' : 'rgba(255,255,255,0.7)';
+  cx.fillText('◀', lx + BTN_W / 2, BTN_Y + BTN_H / 2);
+
+  // Right button
+  const rx = CW - MARGIN - BTN_W;
+  cx.fillStyle = btnStyle(touchRight);
+  roundRect(cx, rx, BTN_Y, BTN_W, BTN_H, r);
+  cx.fill();
+  roundRect(cx, rx, BTN_Y, BTN_W, BTN_H, r);
+  cx.stroke();
+  cx.fillStyle = touchRight ? '#fff' : 'rgba(255,255,255,0.7)';
+  cx.fillText('▶', rx + BTN_W / 2, BTN_Y + BTN_H / 2);
+
+  cx.restore();
+}
+
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.arcTo(x + w, y, x + w, y + r, r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.arcTo(x + w, y + h, x + w - r, y + h, r);
+  ctx.lineTo(x + r, y + h);
+  ctx.arcTo(x, y + h, x, y + h - r, r);
+  ctx.lineTo(x, y + r);
+  ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
+}
+
+// ── Overlays ──
+function drawTitle() {
+  cx.font = 'bold 48px Arial';
+  cx.textAlign = 'center';
+  cx.textBaseline = 'middle';
+
+  // Title glow
+  cx.shadowColor = '#4488ff';
+  cx.shadowBlur = 30;
+  cx.fillStyle = '#80c8ff';
+  cx.fillText('BOUNCED', CW / 2, CH * 0.3);
+  cx.shadowBlur = 0;
+
+  cx.font = '16px Arial';
+  cx.fillStyle = '#aaa';
+  cx.fillText('클래식 공튕기기 게임', CW / 2, CH * 0.42);
+
+  cx.font = '13px Arial';
+  cx.fillStyle = '#888';
+  cx.fillText('← → 방향키 / 화면 좌우 탭으로 조작', CW / 2, CH * 0.5);
+  cx.fillText('벽에 붙어 반대 방향키 → 벽 점프', CW / 2, CH * 0.56);
+  cx.fillText('★ 에 닿으면 스테이지 클리어!', CW / 2, CH * 0.62);
+
+  // Blinking start prompt
+  if (Math.floor(Date.now() / 500) % 2 === 0) {
+    cx.font = 'bold 18px Arial';
+    cx.fillStyle = '#ffd700';
+    cx.fillText('[ 아무 키 / 화면을 눌러 시작 ]', CW / 2, CH * 0.78);
+  }
+}
+
+function drawStageClear() {
+  cx.fillStyle = 'rgba(0,0,0,0.65)';
+  cx.fillRect(0, 0, CW, CH);
+
+  cx.font = 'bold 40px Arial';
+  cx.textAlign = 'center';
+  cx.textBaseline = 'middle';
+  cx.shadowColor = '#ffd700';
+  cx.shadowBlur = 25;
+  cx.fillStyle = '#ffd700';
+  cx.fillText('STAGE CLEAR!', CW / 2, CH * 0.35);
+  cx.shadowBlur = 0;
+
+  cx.font = '18px Arial';
+  cx.fillStyle = '#ccc';
+  cx.fillText(`점수: ${score.toLocaleString()}`, CW / 2, CH * 0.48);
+
+  if (Math.floor(Date.now() / 600) % 2 === 0) {
+    cx.font = 'bold 16px Arial';
+    cx.fillStyle = '#80ffaa';
+    cx.fillText('[ 아무 키 / 화면을 눌러 다음 스테이지 ]', CW / 2, CH * 0.6);
+  }
+}
+
+function drawWin() {
+  cx.fillStyle = 'rgba(0,0,0,0.72)';
+  cx.fillRect(0, 0, CW, CH);
+
+  cx.font = 'bold 44px Arial';
+  cx.textAlign = 'center';
+  cx.textBaseline = 'middle';
+  cx.shadowColor = '#ffd700';
+  cx.shadowBlur = 35;
+  cx.fillStyle = '#ffd700';
+  cx.fillText('🎉 COMPLETE!', CW / 2, CH * 0.32);
+  cx.shadowBlur = 0;
+
+  cx.font = '20px Arial';
+  cx.fillStyle = '#fff';
+  cx.fillText(`최종 점수: ${score.toLocaleString()}`, CW / 2, CH * 0.46);
+
+  cx.font = '14px Arial';
+  cx.fillStyle = '#aaa';
+  cx.fillText('3스테이지를 모두 클리어했습니다!', CW / 2, CH * 0.55);
+
+  if (Math.floor(Date.now() / 600) % 2 === 0) {
+    cx.font = 'bold 16px Arial';
+    cx.fillStyle = '#80c8ff';
+    cx.fillText('[ 아무 키 / 화면을 눌러 처음부터 ]', CW / 2, CH * 0.68);
+  }
+}
+
+// ══════════════════════════════════════════
+//  GAME LOOP
+// ══════════════════════════════════════════
+const TARGET_DT = 1 / 60;
+let accum = 0;
+
+function loop(ts) {
+  raf = requestAnimationFrame(loop);
+  const raw = (ts - prevTime) / 1000;
+  prevTime = ts;
+  const dt = Math.min(raw, 0.05); // cap at 50ms
+
+  if (gameState === 'playing') {
+    accum += dt;
+    while (accum >= TARGET_DT) {
+      update(TARGET_DT);
+      accum -= TARGET_DT;
+    }
+  }
+  render(ts);
+}
+
+// ══════════════════════════════════════════
+//  INPUT
+// ══════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') keys.left  = true;
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = true;
+  if (gameState === 'title') { score = 0; initStage(0); return; }
+  if (gameState === 'stageclear') { initStage(stage + 1); return; }
+  if (gameState === 'win') { score = 0; initStage(0); return; }
+});
+document.addEventListener('keyup', e => {
+  if (e.key === 'ArrowLeft'  || e.key === 'a' || e.key === 'A') keys.left  = false;
+  if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') keys.right = false;
+});
+
+// ── Touch controls ──
+function canvasX(e) {
+  const rect = CV.getBoundingClientRect();
+  return (e.clientX - rect.left) * (CW / rect.width);
+}
+function canvasY(e) {
+  const rect = CV.getBoundingClientRect();
+  return (e.clientY - rect.top) * (CH / rect.height);
+}
+
+const BTN_Y_START = CH - 62;
+const BTN_W = 90, BTN_H = 50, MARGIN = 14;
+
+function isTouchLeft(cx_) { return cx_ >= MARGIN && cx_ <= MARGIN + BTN_W; }
+function isTouchRight(cx_) { return cx_ >= CW - MARGIN - BTN_W && cx_ <= CW - MARGIN; }
+
+CV.addEventListener('touchstart', e => {
+  e.preventDefault();
+  if (gameState === 'title') { score = 0; initStage(0); return; }
+  if (gameState === 'stageclear') { initStage(stage + 1); return; }
+  if (gameState === 'win') { score = 0; initStage(0); return; }
+  for (const t of e.touches) {
+    const tx = canvasX(t), ty = canvasY(t);
+    if (ty >= BTN_Y_START) {
+      if (isTouchLeft(tx))  touchLeft  = true;
+      if (isTouchRight(tx)) touchRight = true;
+    } else {
+      // Tap anywhere else = direction based on half
+      if (tx < CW / 2) touchLeft  = true;
+      else             touchRight = true;
+    }
+  }
+}, { passive: false });
+
+CV.addEventListener('touchmove', e => {
+  e.preventDefault();
+  touchLeft = false; touchRight = false;
+  for (const t of e.touches) {
+    const tx = canvasX(t), ty = canvasY(t);
+    if (ty >= BTN_Y_START) {
+      if (isTouchLeft(tx))  touchLeft  = true;
+      if (isTouchRight(tx)) touchRight = true;
+    } else {
+      if (tx < CW / 2) touchLeft  = true;
+      else             touchRight = true;
+    }
+  }
+}, { passive: false });
+
+CV.addEventListener('touchend', e => {
+  e.preventDefault();
+  if (e.touches.length === 0) { touchLeft = false; touchRight = false; return; }
+  touchLeft = false; touchRight = false;
+  for (const t of e.touches) {
+    const tx = canvasX(t), ty = canvasY(t);
+    if (ty >= BTN_Y_START) {
+      if (isTouchLeft(tx))  touchLeft  = true;
+      if (isTouchRight(tx)) touchRight = true;
+    }
+  }
+}, { passive: false });
+
+// ── Mouse (desktop fallback for buttons) ──
+CV.addEventListener('mousedown', e => {
+  if (gameState !== 'playing') {
+    if (gameState === 'title') { score = 0; initStage(0); }
+    else if (gameState === 'stageclear') initStage(stage + 1);
+    else if (gameState === 'win') { score = 0; initStage(0); }
+    return;
+  }
+  const rect = CV.getBoundingClientRect();
+  const mx = (e.clientX - rect.left) * (CW / rect.width);
+  const my = (e.clientY - rect.top)  * (CH / rect.height);
+  if (my >= BTN_Y_START) {
+    if (isTouchLeft(mx))  touchLeft  = true;
+    if (isTouchRight(mx)) touchRight = true;
+  }
+});
+CV.addEventListener('mouseup', () => { touchLeft = false; touchRight = false; });
+
+// ══════════════════════════════════════════
+//  START
+// ══════════════════════════════════════════
+prevTime = performance.now();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>
