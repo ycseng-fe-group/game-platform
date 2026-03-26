@@ -31,6 +31,17 @@ const cx = CV.getContext('2d');
 const CW = 480, CH = 600;
 const TILE = 30, COLS = 16, ROWS = 20;
 
+// devicePixelRatio scaling for crisp rendering on retina displays
+const _dpr = Math.min(window.devicePixelRatio || 1, 2);
+CV.width = CW * _dpr;
+CV.height = CH * _dpr;
+cx.scale(_dpr, _dpr);
+
+// Cached static background gradient (created once, reused every frame)
+const _bgGrad = cx.createLinearGradient(0, 0, 0, CH);
+_bgGrad.addColorStop(0, '#050510');
+_bgGrad.addColorStop(1, '#0a0a1e');
+
 // ── Tile types ──
 const T_EMPTY = 0, T_WALL = 1, T_START = 2, T_GOAL = 3;
 
@@ -323,11 +334,8 @@ function render(ts) {
   goalPulse = ts * 0.003;
   cx.clearRect(0, 0, CW, CH);
 
-  // Background gradient
-  const bg = cx.createLinearGradient(0, 0, 0, CH);
-  bg.addColorStop(0, '#050510');
-  bg.addColorStop(1, '#0a0a1e');
-  cx.fillStyle = bg;
+  // Background gradient (cached)
+  cx.fillStyle = _bgGrad;
   cx.fillRect(0, 0, CW, CH);
 
   if (gameState === 'title') { drawTitle(); return; }
@@ -744,7 +752,16 @@ CV.addEventListener('mouseup', () => { touchLeft = false; touchRight = false; })
 //  START
 // ══════════════════════════════════════════
 prevTime = performance.now();
-requestAnimationFrame(loop);
+raf = requestAnimationFrame(loop);
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    cancelAnimationFrame(raf);
+  } else if (gameState === 'playing') {
+    prevTime = performance.now();
+    raf = requestAnimationFrame(loop);
+  }
+});
 </script>
 </body>
 </html>

@@ -18,6 +18,10 @@
 'use strict';
 const CV=document.getElementById('c'),ctx=CV.getContext('2d');
 const CW=480,CH=600,TILE=40,GC=12,GR=12,GY=55,BP=GY+GR*TILE; // BP=535
+const _dpr=Math.min(window.devicePixelRatio||1,2);
+CV.width=CW*_dpr; CV.height=CH*_dpr;
+CV.style.width=CW+'px'; CV.style.height=CH+'px';
+ctx.scale(_dpr,_dpr);
 
 // ══════════════════════════════════════════════════════
 //  DATA
@@ -753,6 +757,7 @@ class Projectile{
 //  GAME STATE
 // ══════════════════════════════════════════════════════
 let gstate='menu'; // menu|playing|stageclear|gameover
+let rafId=0;
 let stageId=0, gold=0, hp=0;
 let enemies=[], towers=[], projectiles=[], vfx=[];
 let pathTiles=new Set(), pathPx=[];
@@ -822,7 +827,7 @@ function updateGame(dt){
   for(const e of enemies){
     if(e.reached&&!e._counted){e._counted=true;hp--;if(hp<=0){gstate='gameover';}}
   }
-  enemies=enemies.filter(e=>!(e.dead&&Date.now()-0>0)); // keep for rendering
+  enemies=enemies.filter(e=>!e.dead);
   // Towers
   for(const t of towers)t.update(dt2);
   // Projectiles
@@ -834,8 +839,6 @@ function updateGame(dt){
     if(v.type==='explosion')v.r=v.maxR*(1-v.life);
   }
   vfx=vfx.filter(v=>v.life>0);
-  // Clean dead enemies after a brief display
-  if(Math.random()<0.05)enemies=enemies.filter(e=>!e.dead&&!e.reached||e.pi>0);
 }
 
 // ══════════════════════════════════════════════════════
@@ -948,8 +951,8 @@ function drawHUD(){
   ctx.fillStyle=hp>10?'#ff6b6b':hp>5?'#ffa502':'#ff4757';
   const hpStr='❤️'.repeat(Math.min(hp,10))+(hp>10?` +${hp-10}`:'');
   ctx.fillText(`HP: ${hp}`,CW/2,16);
-  // Enemy count
-  const alive=enemies.filter(e=>!e.dead&&!e.reached).length;
+  // Enemy count (loop instead of filter to avoid per-frame array allocation)
+  let alive=0; for(const e of enemies) if(!e.dead&&!e.reached) alive++;
   ctx.font='11px Arial';ctx.fillStyle='#aaa';
   ctx.fillText(`적: ${alive}마리`,CW/2,36);
 
@@ -1270,14 +1273,23 @@ CV.addEventListener('touchend',e=>{
 //  LOOP
 // ══════════════════════════════════════════════════════
 function loop(ts){
-  requestAnimationFrame(loop);
+  rafId=requestAnimationFrame(loop);
   const dt=Math.min((ts-prevTs)/1000,0.05);
   prevTs=ts;
   if(gstate==='playing')updateGame(dt);
   render(ts);
 }
+document.addEventListener('visibilitychange',()=>{
+  if(document.hidden){
+    cancelAnimationFrame(rafId);
+  } else {
+    prevTs=performance.now();
+    rafId=requestAnimationFrame(loop);
+  }
+});
+
 prevTs=performance.now();
-requestAnimationFrame(loop);
+rafId=requestAnimationFrame(loop);
 </script>
 </body>
 </html>

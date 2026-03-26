@@ -152,6 +152,9 @@ const COLS = 10, ROWS = 20, CELL = 20;
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const nctx = document.getElementById('next-canvas').getContext('2d');
+const _dpr = Math.min(window.devicePixelRatio || 1, 2);
+canvas.width = CELL * COLS * _dpr;  canvas.height = CELL * ROWS * _dpr;
+ctx.scale(_dpr, _dpr);
 
 const PIECES = [
   { shape: [[1,1,1,1]], color: '#22d3ee' },          // I
@@ -163,7 +166,7 @@ const PIECES = [
   { shape: [[0,0,1],[1,1,1]], color: '#fb923c' },      // L
 ];
 
-let board, current, next, score, lines, level, gameRunning, paused, dropTimer, dropInterval;
+let board, current, next, score, lines, level, gameRunning, paused, dropTimer, dropInterval, rafId;
 
 function newPiece() {
   const p = PIECES[Math.floor(Math.random() * PIECES.length)];
@@ -293,10 +296,11 @@ function gameLoop(ts) {
     dropTimer = ts;
   }
   draw();
-  requestAnimationFrame(gameLoop);
+  rafId = requestAnimationFrame(gameLoop);
 }
 
 function startGame() {
+  cancelAnimationFrame(rafId);
   board = Array.from({ length: ROWS }, () => Array(COLS).fill(null));
   score = 0; lines = 0; level = 1; dropInterval = 500; paused = false;
   document.getElementById('score-val').textContent = '0';
@@ -309,8 +313,16 @@ function startGame() {
   drawNext();
   gameRunning = true;
   dropTimer = 0;
-  requestAnimationFrame(ts => { dropTimer = ts; requestAnimationFrame(gameLoop); });
+  rafId = requestAnimationFrame(ts => { dropTimer = ts; rafId = requestAnimationFrame(gameLoop); });
 }
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    cancelAnimationFrame(rafId);
+  } else if (gameRunning && !paused) {
+    rafId = requestAnimationFrame(gameLoop);
+  }
+});
 
 function endGame() {
   gameRunning = false;

@@ -37,6 +37,10 @@
 const canvas = document.getElementById('canvas');
 const ctx = canvas.getContext('2d');
 const CELL = 20, COLS = 18, ROWS = 18;
+const _dpr = Math.min(window.devicePixelRatio || 1, 2);
+canvas.width = CELL * COLS * _dpr;
+canvas.height = CELL * ROWS * _dpr;
+ctx.scale(_dpr, _dpr);
 let snake, dir, food, score, running, loop;
 
 function startGame() {
@@ -103,6 +107,14 @@ document.addEventListener('keydown', e => {
   if (map[e.key] && !(map[e.key].x===-dir.x && map[e.key].y===-dir.y)) {
     dir = map[e.key];
     e.preventDefault();
+  }
+});
+
+document.addEventListener('visibilitychange', () => {
+  if (document.hidden) {
+    clearInterval(loop);
+  } else if (running) {
+    loop = setInterval(tick, 120);
   }
 });
 

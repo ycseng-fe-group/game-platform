@@ -330,7 +330,10 @@ class Renderer{
   constructor(canvas){
     this.canvas=canvas;
     this.ctx=canvas.getContext('2d');
-    canvas.width=CW; canvas.height=CH;
+    const dpr=Math.min(window.devicePixelRatio||1,2);
+    canvas.width=CW*dpr; canvas.height=CH*dpr;
+    canvas.style.width=CW+'px'; canvas.style.height=CH+'px';
+    this.ctx.scale(dpr,dpr);
     this.particles=[];
     this._flashLane=[-1,-1,-1,-1]; // time of last hit per lane
   }
@@ -601,7 +604,16 @@ class Game{
     this.lastTs=0;
 
     this._bind(canvas);
-    requestAnimationFrame(ts=>this._loop(ts));
+    this._rafId = requestAnimationFrame(ts=>this._loop(ts));
+
+    document.addEventListener('visibilitychange', () => {
+      if (document.hidden) {
+        cancelAnimationFrame(this._rafId);
+      } else {
+        this.lastTs = performance.now();
+        this._rafId = requestAnimationFrame(ts=>this._loop(ts));
+      }
+    });
   }
 
   _bind(canvas){
@@ -680,7 +692,7 @@ class Game{
       this.renderer.drawResult(this.judge,this.chart.length);
     }
 
-    requestAnimationFrame(ts=>this._loop(ts));
+    this._rafId = requestAnimationFrame(ts=>this._loop(ts));
   }
 }
 
